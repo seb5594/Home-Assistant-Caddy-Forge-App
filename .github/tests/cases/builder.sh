@@ -34,7 +34,7 @@ test_builder_plan() {
   builder_plan
   assert_equals "stock" "$PLAN_ACTION" "plan: the pinned default needs no build"
 
-  use_options ".caddy.version = \"$bundled\" | .caddy.modules = [\"github.com/a/b\"]"
+  use_options ".caddy.version = \"$bundled\" | .caddy.modules = [{\"module\": \"github.com/a/b\"}]"
   builder_load_request
   builder_plan
   assert_equals "build" "$PLAN_ACTION" "plan: a plugin needs a build"
@@ -44,18 +44,18 @@ test_builder_plan() {
   builder_plan
   assert_equals "build" "$PLAN_ACTION" "plan: another pinned version needs a build"
 
-  use_options ".caddy.version = \"$bundled\" | .caddy.modules = [\"github.com/a/b@v1.0.0\"]"
+  use_options ".caddy.version = \"$bundled\" | .caddy.modules = [{\"module\": \"github.com/a/b@v1.0.0\"}]"
   builder_load_request
   install_custom_binary
   builder_plan
   assert_equals "reuse" "$PLAN_ACTION" "plan: a matching build is reused"
 
-  use_options ".caddy.version = \"$bundled\" | .caddy.modules = [\"github.com/a/b@v1.0.0\", \"github.com/c/d@v1.0.0\"]"
+  use_options ".caddy.version = \"$bundled\" | .caddy.modules = [{\"module\": \"github.com/a/b@v1.0.0\"}, {\"module\": \"github.com/c/d@v1.0.0\"}]"
   builder_load_request
   builder_plan
   assert_equals "build" "$PLAN_ACTION" "plan: changed plugins invalidate the old build"
 
-  use_options ".caddy.version = \"$bundled\" | .caddy.modules = [\"github.com/a/b\"]"
+  use_options ".caddy.version = \"$bundled\" | .caddy.modules = [{\"module\": \"github.com/a/b\"}]"
   builder_load_request
   install_custom_binary
   set_built_module_version github.com/a/b v0.9.0
@@ -63,12 +63,12 @@ test_builder_plan() {
   assert_equals "build" "$PLAN_ACTION" "plan: a newer plugin release triggers a rebuild"
   assert_contains "${PENDING_UPDATES[*]}" "github.com/a/b v0.9.0 -> v1.0.0" "plan: the update is reported"
 
-  use_options ".caddy.version = \"$bundled\" | .caddy.modules = [\"github.com/a/b\"] | .caddy.updates = \"notify\""
+  use_options ".caddy.version = \"$bundled\" | .caddy.modules = [{\"module\": \"github.com/a/b\"}] | .caddy.updates = \"notify\""
   builder_load_request
   builder_plan
   assert_equals "reuse" "$PLAN_ACTION" "plan: notify only reports a plugin update"
 
-  use_options ".caddy.version = \"$bundled\" | .caddy.modules = [\"github.com/a/b\"] | .caddy.updates = \"off\""
+  use_options ".caddy.version = \"$bundled\" | .caddy.modules = [{\"module\": \"github.com/a/b\"}] | .caddy.updates = \"off\""
   builder_load_request
   builder_plan
   assert_equals "reuse" "$PLAN_ACTION" "plan: with updates off nothing is looked up"
@@ -96,7 +96,7 @@ test_builder_activation() {
   use_clean_folders
   local bundled before
   bundled=$(builder_bundled_version)
-  use_options ".caddy.version = \"$bundled\" | .caddy.modules = [\"github.com/a/b@v1.0.0\"]"
+  use_options ".caddy.version = \"$bundled\" | .caddy.modules = [{\"module\": \"github.com/a/b@v1.0.0\"}]"
   builder_load_request
   CADDYFILE="$FORGE_CONFIG_DIR/Caddyfile"
   printf ':8080 {\n\trespond "ok"\n}\n' >"$CADDYFILE"

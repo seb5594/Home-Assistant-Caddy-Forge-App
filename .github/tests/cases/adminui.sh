@@ -17,20 +17,10 @@ test_accent() {
   make_themes
   assert_equals $'Ocean Blue\t#1e88e5\nForest\t#2e7d32\nPlain\trgb(10, 20, 30)' "$(adminui_themes)" "accent: themes and their primary colours are read from Home Assistant's folder"
 
-  use_options '.admin_ui.enabled = true'
-  assert_equals "" "$(adminui_default_accent)" "accent: Home Assistant blue is the default"
-  use_options '.admin_ui.accent = "#ff0000"'
-  assert_equals "#ff0000" "$(adminui_default_accent)" "accent: a colour is taken as it is"
-  use_options '.admin_ui.accent = "ocean blue"'
-  assert_equals "#1e88e5" "$(adminui_default_accent)" "accent: a theme name follows that theme's colour, whatever its case"
-  use_options '.admin_ui.accent = "No Such Theme"'
-  assert_contains "$(adminui_default_accent 2>&1)" "neither a colour nor a theme" "accent: an unknown theme is reported"
-
-  use_options '.admin_ui.accent = "Forest"'
   adminui_write_palette
   local palette="$FORGE_DATA_DIR/admin-ui/palette.json"
-  assert_equals "#2e7d32" "$(jq -r .default "$palette")" "accent: the palette carries the default accent"
-  assert_equals "Home Assistant" "$(jq -r '.presets[0].name' "$palette")" "accent: Home Assistant blue is the first preset"
+  assert_equals "#4fc3f7" "$(jq -r .default "$palette")" "accent: a light blue is the default"
+  assert_equals "Light blue" "$(jq -r '.presets[0].name' "$palette")" "accent: the default is also the first preset"
   assert_equals "3" "$(jq '.themes | length' "$palette")" "accent: the user's themes are part of the palette"
   assert_contains "$(adminui_generate)" "handle /_forge/palette.json" "accent: the palette is served next to the page script"
 }
@@ -40,7 +30,7 @@ test_adminui() {
   use_options '.admin_ui.enabled = true'
   local output
   output=$(adminui_generate)
-  assert_contains "$output" "http://:8099 {" "admin UI: it listens on its own port"
+  assert_contains "$output" "http://:5594 {" "admin UI: it listens on its own port"
   assert_contains "$output" "client_ip private_ranges" "admin UI: only private networks may connect"
   assert_contains "$output" "caddy_admin_ui" "admin UI: the plugin's handler serves the pages"
   assert_contains "$output" "reverse_proxy localhost:2019" "admin UI: everything else goes to the admin API"

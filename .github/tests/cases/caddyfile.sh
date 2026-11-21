@@ -53,7 +53,7 @@ test_caddyfile() {
   use_options '.simple.sites = [] | .simple.security_headers = false | .simple.compression = false'
   assert_not_contains "$(caddyfile_generate)" "forge_defaults" "caddyfile: no sites, no shared snippet"
 
-  use_options '.mode = "caddyfile"'
+  use_options '.mode = "advanced (caddyfile)"'
   caddyfile_seed_pro_mode "$FORGE_CONFIG_DIR/Caddyfile"
   assert_contains "$(cat "$FORGE_CONFIG_DIR/Caddyfile")" "Seeded by Caddy Forge" "caddyfile: Caddyfile mode starts from the simple options"
   printf '# mine\n' >"$FORGE_CONFIG_DIR/Caddyfile"
