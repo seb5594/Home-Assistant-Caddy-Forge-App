@@ -124,7 +124,8 @@ schedule. Nothing has to be built for it. Private repositories work with a token
 The app shows a web front end for Caddy's admin API ([`caddy-admin-ui`](https://github.com/gsmlg-dev/caddy-admin-ui)) in Home Assistant's
 sidebar under **Caddy Forge**. It is always on and needs no option: the plugin is part of the shipped binary and of every custom build.
 It opens on the **Upstream** page; you can also read the running configuration and metrics. Every upstream card names the sites that
-use it, as links: a click opens the site, which shows right away whether the proxy entry is correct. Changes made there last until the next start; the options remain the
+use it, as links: a click opens the site, which shows right away whether the proxy entry is correct (the internal HTTP and HTTPS ports of Caddy,
+8080 and 443, are left out of the address). The page speaks German or English, following the language of the browser. Changes made there last until the next start; the options remain the
 source of truth.
 
 * Home Assistant logs the user in; the UI's port **5594** only answers the Supervisor's ingress gateway, nobody else on the network.

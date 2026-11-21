@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026.11.21.10
+
+- 🐛 The links of the upstream page no longer carry the internal port 8080: the ports Caddy listens on for HTTP and HTTPS stand for the usual 80 and 443 outside, so the address is the one you type.
+- 🐛 After switching to another page the footer stayed above the navigation; it now always sits at the bottom.
+- 🎨 Better contrast: navigation, upstream cards, links and footer buttons use the accent colour with matching text. All upstream cards have the same size.
+- ✨ The footer and the plugin's own pages follow the language of the browser (German and English).
+
 ## 2026.11.21.9
 
 - ✨ The admin UI opens on the **Upstream** page, and every upstream names the sites that use it as links, so a click shows whether the proxy entry is correct.
