@@ -16,7 +16,7 @@ for case_file in "$TEST_DIR"/cases/*.sh; do
 done
 
 # A real build downloads Caddy's dependencies and takes a few minutes; skip it with FORGE_TEST_BUILD=0.
-tests=(modules module_entries versions caddyfile recipes gitsites adminui accent migrate builder_plan builder_activation builder_selection server_start)
+tests=(modules module_entries versions caddyfile recipes gitsites adminui accent migrate caddy2_import caddy2_absent builder_plan builder_activation builder_selection server_start)
 if [[ ${FORGE_TEST_BUILD:-1} == 1 ]]; then
   tests+=(real_build)
 fi
