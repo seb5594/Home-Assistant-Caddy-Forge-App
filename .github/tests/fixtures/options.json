@@ -70,8 +70,5 @@
     }
   ],
   "format_caddyfile": false,
-  "admin_ui": {
-    "enabled": false
-  },
   "takeover": false
 }

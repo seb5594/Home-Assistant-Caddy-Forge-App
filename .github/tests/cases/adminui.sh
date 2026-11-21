@@ -22,43 +22,80 @@ test_accent() {
   assert_equals "#4fc3f7" "$(jq -r .default "$palette")" "accent: a light blue is the default"
   assert_equals "Light blue" "$(jq -r '.presets[0].name' "$palette")" "accent: the default is also the first preset"
   assert_equals "3" "$(jq '.themes | length' "$palette")" "accent: the user's themes are part of the palette"
-  assert_contains "$(adminui_generate)" "handle /_forge/palette.json" "accent: the palette is served next to the page script"
+  assert_contains "$(adminui_generate localhost:2019)" "handle /_forge/palette.json" "accent: the palette is served next to the page script"
 }
 
 test_adminui() {
   use_clean_folders
-  use_options '.admin_ui.enabled = true'
   local output
-  output=$(adminui_generate)
+  output=$(adminui_generate localhost:2019)
   assert_contains "$output" "http://:5594 {" "admin UI: it listens on its own port"
-  assert_not_contains "$(caddyfile_global_block)" "admin off" "admin UI: the admin API it needs is not switched off"
-  assert_contains "$output" "client_ip private_ranges" "admin UI: only private networks may connect"
+  assert_contains "$output" "@ingress remote_ip $FORGE_INGRESS_IP" "admin UI: only the ingress gateway of the Supervisor may connect"
+  assert_contains "$output" 'respond "Forbidden" 403' "admin UI: everybody else is refused"
   assert_contains "$output" "caddy_admin_ui" "admin UI: the plugin's handler serves the pages"
   assert_contains "$output" "reverse_proxy localhost:2019" "admin UI: everything else goes to the admin API"
+  assert_contains "$output" "header_up Host localhost:2019" "admin UI: an admin API on a TCP address is addressed by its name"
   assert_contains "$output" 'respond @pty "Forbidden" 403' "admin UI: the web shell endpoint is blocked"
-  assert_contains "$output" "respond @badhost" "admin UI: public host names are refused (DNS rebinding)"
-  assert_contains "$output" "@samepage expression" "admin UI: requests of the page itself are recognised"
-  assert_contains "$output" 'src=\"/_forge/footer.js\"' "admin UI: pages are rewritten to load the footer script"
-  assert_contains "$output" "header Content-Type text/html*" "admin UI: only HTML pages are rewritten"
+  assert_contains "$output" "@samepage header Sec-Fetch-Site same-origin" "admin UI: requests of the page itself are recognised"
+  assert_contains "$output" "{http.request.header.X-Ingress-Path}" "admin UI: links get the ingress path of the request"
+  assert_contains "$output" 'src=\"{http.request.header.X-Ingress-Path}/_forge/footer.js\"' "admin UI: pages are rewritten to load the footer script"
+  assert_contains "$output" "match {" "admin UI: only some responses are rewritten"
+  assert_contains "$output" "handle /_forge/palette.json" "admin UI: the palette is served next to the page script"
   assert_contains "$output" "root * $ADMIN_UI_ASSETS" "admin UI: the footer files are served from the image"
   assert_succeeds "admin UI: the footer files exist in the image" test -s "$ADMIN_UI_ASSETS/footer.js" -a -s "$ADMIN_UI_ASSETS/footer.css"
-  assert_not_contains "$output" "basic_auth" "admin UI: no login unless one is configured"
+  assert_not_contains "$output" "basic_auth" "admin UI: no login of its own, Home Assistant does that"
+  assert_not_contains "$output" "client_ip" "admin UI: no host name based checks"
+  assert_not_contains "$(adminui_generate unix//run/x.sock)" "header_up" "admin UI: a unix socket needs no host header"
+  assert_contains "$(adminui_generate unix//run/x.sock)" "reverse_proxy unix//run/x.sock" "admin UI: the admin socket is used as it is"
+}
 
-  use_options '.admin_ui.enabled = true | .admin_ui.user = "root" | .admin_ui.password = "secret"'
-  output=$(adminui_generate)
-  assert_contains "$output" 'basic_auth {' "admin UI: a configured login is required"
-  assert_not_contains "$output" "secret" "admin UI: the plain password never reaches the file"
+test_adminui_upstream() {
+  use_clean_folders
+  assert_equals "localhost:2019" "$(adminui_upstream localhost:2019)" "admin upstream: a named address stays"
+  assert_equals "localhost:2020" "$(adminui_upstream :2020)" "admin upstream: only a port means this machine"
+  assert_equals "localhost:2020" "$(adminui_upstream 0.0.0.0:2020)" "admin upstream: a wildcard address means this machine"
+  assert_equals "localhost:2020" "$(adminui_upstream tcp/localhost:2020)" "admin upstream: the tcp prefix goes"
+  assert_equals "unix//run/a.sock" "$(adminui_upstream unix//run/a.sock)" "admin upstream: a unix socket stays"
 
-  printf ':8080 {\n\trespond "ok"\n}\n' >"$FORGE_CONFIG_DIR/Caddyfile"
-  local combined original
-  original=$(cat "$FORGE_CONFIG_DIR/Caddyfile")
-  combined=$(adminui_compose "$FORGE_CONFIG_DIR/Caddyfile")
-  assert_contains "$(cat "$combined")" "import $FORGE_CONFIG_DIR/Caddyfile" "admin UI: the combined file loads your Caddyfile first"
-  assert_contains "$(cat "$FORGE_DATA_DIR/admin-ui.Caddyfile")" "caddy_admin_ui" "admin UI: followed by the generated block"
-  assert_equals "$original" "$(cat "$FORGE_CONFIG_DIR/Caddyfile")" "admin UI: your own Caddyfile is never modified"
+  printf '%s' '{"admin":{"disabled":true}}' >"$TEST_TMP/a.json"
+  assert_equals "" "$(adminui_admin_listen "$TEST_TMP/a.json")" "admin listen: a switched off admin API has no address"
+  printf '%s' '{"admin":{"listen":"localhost:2020"}}' >"$TEST_TMP/a.json"
+  assert_equals "localhost:2020" "$(adminui_admin_listen "$TEST_TMP/a.json")" "admin listen: a chosen address is read"
+  printf '%s' '{"apps":{}}' >"$TEST_TMP/a.json"
+  assert_equals "localhost:2019" "$(adminui_admin_listen "$TEST_TMP/a.json")" "admin listen: the default address applies when nothing is set"
+}
 
-  printf '{\n\tadmin :2020\n}\n' >"$FORGE_CONFIG_DIR/Caddyfile"
-  assert_contains "$(adminui_check_admin_api "$FORGE_CONFIG_DIR/Caddyfile" 2>&1)" "admin endpoint" "admin UI: a custom admin address is flagged"
+# Adapts a Caddyfile the way the app does and injects the admin UI; prints the resulting JSON.
+inject_into() {
+  local caddyfile=$1
+  "$CADDY_BIN" adapt --config "$caddyfile" --adapter caddyfile >"$TEST_TMP/base.json" 2>/dev/null
+  adminui_inject "$TEST_TMP/base.json" "$TEST_TMP/run.json" && cat "$TEST_TMP/run.json"
+}
+
+test_adminui_inject() {
+  use_clean_folders
+  CADDY_BIN="$FORGE_BUNDLED_CADDY"
+  local caddyfile="$FORGE_CONFIG_DIR/Caddyfile" original result
+  printf '{\n\tadmin off\n}\n\n:8080 {\n\trespond "ok"\n}\n' >"$caddyfile"
+  original=$(cat "$caddyfile")
+  result=$(inject_into "$caddyfile")
+  assert_equals "forge_admin_ui" "$(jq -r '.apps.http.servers | keys[] | select(. == "forge_admin_ui")' <<<"$result")" "inject: the UI's server joins the configuration"
+  assert_equals "$(adminui_socket)" "$(jq -r '.admin.listen' <<<"$result" | sed 's#^unix/##')" "inject: a switched off admin API is reachable at the private socket"
+  assert_equals "null" "$(jq -r '.admin.disabled' <<<"$result")" "inject: the admin API is no longer disabled"
+  assert_equals "2" "$(jq '.apps.http.servers | length' <<<"$result")" "inject: the server of the user stays"
+  assert_equals "$original" "$(cat "$caddyfile")" "inject: your own Caddyfile is never modified"
+
+  printf '{\n\tadmin localhost:2020\n}\n:8080 {\n\trespond "ok"\n}\n' >"$caddyfile"
+  result=$(inject_into "$caddyfile")
+  assert_equals "localhost:2020" "$(jq -r '.admin.listen' <<<"$result")" "inject: an admin address chosen by the user is kept"
+  assert_contains "$(jq -r '.. | .dial? // empty' <<<"$result")" "localhost:2020" "inject: the UI talks to that address"
+
+  printf ':8080 {\n\trespond "ok"\n}\n' >"$caddyfile"
+  result=$(inject_into "$caddyfile")
+  assert_equals "null" "$(jq -r '.admin.listen' <<<"$result")" "inject: the default admin API is left alone"
+  assert_contains "$(jq -r '.. | .dial? // empty' <<<"$result")" "localhost:2019" "inject: the UI talks to the default admin address"
+  assert_equals "forge_admin_ui" "$(jq -r '.apps.http.servers | keys[] | select(. == "forge_admin_ui")' <<<"$result")" "inject: also works for a plain site"
+  assert_succeeds "inject: Caddy accepts the result" "$CADDY_BIN" validate --config "$TEST_TMP/run.json"
 }
 
 # A stand-in for Caddy with the nginx adapter: it prints JSON and one warning.
