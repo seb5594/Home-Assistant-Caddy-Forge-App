@@ -116,13 +116,12 @@ Wer nicht aus den genannten Netzen kommt, bekommt nur „Forbidden“; im Netz w
 
 ## 7. Caddy selbst ansehen: die Admin-Oberfläche
 
-Aktiviere **Admin-Oberfläche** in der Konfiguration. Die App nimmt das Plugin
-[`caddy-admin-ui`](https://github.com/gsmlg-dev/caddy-admin-ui) in den nächsten Build auf und liefert es auf Port
-**5594** aus (dann auf der App-Seite *Web-UI öffnen* nutzen). Du siehst die laufende
+Öffne **Caddy** in der Seitenleiste von Home Assistant. Es muss nichts aktiviert werden: Die Admin-Oberfläche
+([`caddy-admin-ui`](https://github.com/gsmlg-dev/caddy-admin-ui)) gehört zur App. Du siehst die laufende
 Konfiguration, Upstreams und Metriken; Änderungen dort leben nur im Speicher bis zum nächsten Start, die Optionen bleiben
 die maßgebliche Quelle.
 
-Farben: Die Oberfläche startet in einem hellen Blau; Besucher wählen im Seitenfuß ihre eigene Farbe aus der Palette. Öffne sie über die IP-Adresse oder einen lokalen Namen, z. B. `homeassistant.local:5594`. Zur Absicherung: Nur private Netze dürfen zugreifen, ein Login lässt sich ergänzen, Anfragen von fremden Webseiten werden
-abgewiesen, und die eingebaute Web-Shell des Plugins bleibt aus, ihr Endpunkt ist gesperrt. Die Oberfläche ist eine
-Single-Page-App mit absoluten Links, darum gibt es sie auf einem eigenen Port und nicht in der Seitenleiste von Home
-Assistant (Ingress).
+Farben: Die Oberfläche folgt der Primärfarbe deines Home-Assistant-Themes; Besucher wählen im Seitenfuß ihre eigene Farbe aus der
+Palette. Zur Absicherung: Home Assistant meldet den Nutzer an, der Port der Oberfläche antwortet nur dem Supervisor, Anfragen von
+fremden Webseiten werden abgewiesen, und die eingebaute Web-Shell des Plugins bleibt aus, ihr Endpunkt ist gesperrt. Deine eigene
+Caddyfile bleibt dafür unverändert, auch wenn sie `admin off` enthält.

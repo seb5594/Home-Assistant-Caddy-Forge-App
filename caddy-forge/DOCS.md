@@ -31,13 +31,13 @@ binary lives next to the server, so there is nothing to copy between apps.
 ## Network
 
 The app runs on the **host network**, like the Caddy 2 app did. There is no port mapping to configure; Caddy listens on the host
-itself: **8080** (HTTP, the router forwards port 80 to it), **443** (HTTPS and HTTP/3) and, with the admin UI on, **5594**.
+itself: **8080** (HTTP, the router forwards port 80 to it), **443** (HTTPS and HTTP/3). The admin UI listens on **5594**, which only the Supervisor may reach (see below).
 Consequences:
 
 * Home Assistant is `localhost:8123`; services on the same host are `localhost:<port>` as well. Names of other apps (`a0d7b954-nodered`)
   are not guaranteed to resolve from the host network: use the address and port a service listens on.
 * Home Assistant sees the proxy as `127.0.0.1`, hence the `trusted_proxies` above.
-* Generated Caddyfiles set `http_port 8080` and switch the admin API off (the admin UI turns it on). In `advanced (caddyfile)` mode your file
+* Generated Caddyfiles set `http_port 8080` and put the admin API on a private unix socket. In `advanced (caddyfile)` mode your file
   decides: add `http_port 8080` to its global block if it should use 8080 as well.
 
 ## How the app starts
@@ -121,21 +121,20 @@ schedule. Nothing has to be built for it. Private repositories work with a token
 
 ### Admin UI
 
-Switch on **Admin UI** to add the plugin [`caddy-admin-ui`](https://github.com/gsmlg-dev/caddy-admin-ui) to the build.
-It shows the running configuration, upstreams and metrics and is served on port **5594**, to private networks only, optionally
-behind a username and password. *Open Web UI* on the app page opens it.
-The accent colour of the UI is a light blue. Visitors can change it in the footer palette (presets, the primary colours of the themes in
-Home Assistant's `themes` folder and a free colour picker); the choice is kept in that browser. `?accent=%23e91e63` in the address
-works too, and so does the colour of the Home Assistant page around it when the UI is embedded in one. Home Assistant keeps a user's
-chosen theme in that user's browser, which a page on another port cannot read, so it cannot be picked up automatically.
+The app shows a web front end for Caddy's admin API ([`caddy-admin-ui`](https://github.com/gsmlg-dev/caddy-admin-ui)) in Home Assistant's
+sidebar under **Caddy**. It is always on and needs no option: the plugin is part of the shipped binary and of every custom build.
+You can read the running configuration, upstreams and metrics. Changes made there last until the next start; the options remain the
+source of truth.
 
-Open it by IP address or a local name (`homeassistant.local:5594`, `192.168.1.10:5594`); public host names are refused as a
-protection against DNS rebinding. The pages carry the developer footer of this app. Changes made in the UI last until the next
-start; the options remain the source of truth. In Caddyfile mode the UI expects the
-admin endpoint at its default address `localhost:2019`.
-
-It is not part of Home Assistant's sidebar (ingress) because it is a single-page app with absolute links that cannot live below an
-ingress path. Its built-in web shell is never enabled and its endpoint is blocked.
+* Home Assistant logs the user in; the UI's port **5594** only answers the Supervisor's ingress gateway, nobody else on the network.
+  Its built-in web shell is never enabled and its endpoint is blocked.
+* Your Caddyfile is never changed for it. On every start the app reads the configuration Caddy is about to run into memory,
+  adds the UI's server to it and, if your file says `admin off`, switches the admin API on at a private unix socket. An admin address
+  you chose yourself (`admin localhost:2020`) is kept and used.
+* The pages carry the developer footer of this app. Its accent colour is a light blue; visitors can change it in the footer palette
+  (presets, the primary colours of the themes in Home Assistant's `themes` folder and a free colour picker) and the choice is kept in
+  that browser. Without a choice the UI follows the primary colour of the Home Assistant page around it. `?accent=%23e91e63` in the
+  address works too.
 
 ### Taking over the Caddy 2 and CaddyBuilder apps
 
@@ -185,7 +184,7 @@ Turn on **Format Caddyfile** to let Caddy tidy the indentation on every start.
 | Dynamic DNS | `github.com/mholt/caddy-dynamicdns` |
 | Rate limiting | `github.com/mholt/caddy-ratelimit` |
 | nginx config adapter | `github.com/caddyserver/nginx-adapter` |
-| Admin UI | `github.com/gsmlg-dev/caddy-admin-ui` (set via **Admin UI**) |
+| Admin UI | `github.com/gsmlg-dev/caddy-admin-ui` (part of every build) |
 | TCP/UDP routing (layer 4) | `github.com/mholt/caddy-l4` |
 
 Plugins bring their own settings; consult the plugin's documentation and place them in `global.caddy` or `sites.caddy`.

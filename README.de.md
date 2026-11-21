@@ -18,7 +18,7 @@ brauchst du kein Caddyfile-Wissen; wenn das nicht reicht, gibt es einen vollwert
 - **Einfacher Modus.** Reverse Proxy, statische Dateien, Weiterleitungen, kostenlose Zertifikate (auch per DNS
   und als Wildcard), Login und Zugriffslisten als Formular statt als Caddyfile.
 - **Websites aus Git.** Ein Seitentyp, der ein Repository ausliefert und aktuell hält; kein Plugin nötig.
-- **Admin-Oberfläche.** Ein Schalter fügt eine Weboberfläche für Caddys Admin-API hinzu, nur aus privaten Netzen erreichbar.
+- **Admin-Oberfläche.** Eine Weboberfläche für Caddys Admin-API, immer aktiv und aus der Seitenleiste von Home Assistant erreichbar.
 - **Caddyfile-Modus.** Beim ersten Mal aus deinem einfachen Setup erzeugt, danach ganz deins. Ein Schalter übernimmt Plugins und Caddy-Version von CaddyBuilder sowie die Caddyfile von Caddy 2, aus zwei Apps wird eine.
 - **Sofort startklar.** Das gepinnte Caddy-Release steckt im Image; die Go-Toolchain arbeitet nur, wenn wirklich
   gebaut werden muss.

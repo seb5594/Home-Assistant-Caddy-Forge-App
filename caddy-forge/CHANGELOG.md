@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026.11.21.8
+
+- ✨ The admin UI opens from Home Assistant's sidebar (ingress) and is always on; the option to switch it off is gone. Only the Supervisor can reach its port, Home Assistant does the login.
+- ✨ The UI works below the ingress path: a response rewrite puts the path in front of its absolute links. Inside Home Assistant's frame the page can read Home Assistant's own primary colour, so the accent follows your theme (a colour picked in the footer still wins).
+- 🔧 The shipped Caddy now contains the two plugins of the admin UI (compiled for every architecture when the image is built), so nothing has to be built on first start. Custom builds always include them at the same versions.
+- 🔒 Your Caddyfile is never changed: the app reads it into JSON in memory, adds the admin UI and, when it says `admin off`, switches the admin API on at a private unix socket. Generated Caddyfiles use that socket instead of a TCP port.
+
 ## 2026.11.21.7
 
 - 🔧 The app runs on the host network (like the Caddy 2 app), so there is nothing to map: Caddy listens on 8080 for HTTP, on 443 for HTTPS and on 5594 for the admin UI. The port section of the app is gone.
