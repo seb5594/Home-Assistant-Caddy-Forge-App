@@ -39,6 +39,10 @@ ADMIN_UI_PRESETS='[
 ADMIN_UI_ROOT_LINK='(href=\\?"|href\\?":\\?")/(\\?")'
 ADMIN_UI_PATHS='(["'"'"'])/(_next/|config/|load|adapt|reverse_proxy/upstreams|metrics|upstream|setup|monitor|shell|favicon|index)'
 ADMIN_UI_PREFIX='{http.request.header.X-Ingress-Path}'
+# The page the panel opens with, and the name the UI shows for itself.
+ADMIN_UI_START_PAGE='/upstream'
+ADMIN_UI_NAME_FROM='Caddy Admin'
+ADMIN_UI_NAME_TO='Caddy Forge Admin'
 
 # The unix socket the admin API listens on unless the configuration chooses an address itself.
 adminui_socket() {
@@ -106,6 +110,8 @@ adminui_generate() {
   printf '\t@ingress remote_ip %s\n' "$FORGE_INGRESS_IP"
   printf '\thandle @ingress {\n\t\troute {\n'
   printf '\t\t\t@pty path /ws/pty*\n\t\t\trespond @pty "Forbidden" 403\n'
+  # The panel opens on the upstream page instead of the raw configuration.
+  printf '\t\t\t@start path /\n\t\t\tredir @start %s%s 302\n' "$ADMIN_UI_PREFIX" "$ADMIN_UI_START_PAGE"
   # The palette, generated on every start, and the page script with its style sheet.
   printf '\t\t\thandle %s/palette.json {\n\t\t\t\troot * %s/admin-ui\n\t\t\t\trewrite * /palette.json\n\t\t\t\tfile_server\n\t\t\t}\n' \
     "$ADMIN_UI_ASSET_PATH" "$FORGE_DATA_DIR"
@@ -119,6 +125,7 @@ adminui_generate() {
   printf '\t\t\t\tre `%s` `${1}%s/index${2}`\n' "$ADMIN_UI_ROOT_LINK" "$ADMIN_UI_PREFIX"
   # shellcheck disable=SC2016
   printf '\t\t\t\tre `%s` `${1}%s/${2}`\n' "$ADMIN_UI_PATHS" "$ADMIN_UI_PREFIX"
+  printf '\t\t\t\t"%s" "%s"\n' "$ADMIN_UI_NAME_FROM" "$ADMIN_UI_NAME_TO"
   printf '\t\t\t\t</body> "<link rel=\\"stylesheet\\" href=\\"%s%s/footer.css\\"><script src=\\"%s%s/footer.js\\" defer></script></body>"\n\t\t\t}\n' \
     "$ADMIN_UI_PREFIX" "$ADMIN_UI_ASSET_PATH" "$ADMIN_UI_PREFIX" "$ADMIN_UI_ASSET_PATH"
   printf '\t\t\tcaddy_admin_ui\n'

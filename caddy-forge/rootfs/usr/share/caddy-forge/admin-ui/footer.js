@@ -154,16 +154,108 @@
     return footer;
   }
 
+  // ---- navigation: mark the current page -------------------------------------------------------
+  function markCurrentPage() {
+    var links = document.querySelectorAll('.navbar .menu a');
+    for (var i = 0; i < links.length; i++) {
+      var here = window.location.pathname.replace(/\/$/, '');
+      var target = new URL(links[i].href, window.location.href).pathname.replace(/\/$/, '');
+      links[i].classList.toggle('forge-current', here === target);
+    }
+  }
+
+  // ---- upstream page: which sites use an upstream ----------------------------------------------
+  // The admin API's configuration lies below the same base as this script, whatever ingress prefix it has.
+  var BASE = new URL('../', SCRIPT).href;
+  var sites = null;
+  var sitesRequested = false;
+
+  // Collects { hosts, dial } for every reverse proxy of a list of routes, also inside nested routes.
+  function collectProxies(routes, hosts, secure, port, found) {
+    (routes || []).forEach(function (route) {
+      var names = hosts;
+      (route.match || []).forEach(function (matcher) { if (matcher.host) { names = matcher.host; } });
+      (route.handle || []).forEach(function (handler) {
+        if (handler.handler === 'subroute') {
+          collectProxies(handler.routes, names, secure, port, found);
+        } else if (handler.handler === 'reverse_proxy') {
+          (handler.upstreams || []).forEach(function (upstream) {
+            if (upstream.dial) { found.push({ hosts: names, dial: upstream.dial, secure: secure, port: port }); }
+          });
+        }
+      });
+    });
+  }
+
+  function siteAddress(host, secure, port) {
+    var defaultPort = secure ? '443' : '80';
+    return (secure ? 'https://' : 'http://') + host + (port && port !== defaultPort ? ':' + port : '');
+  }
+
+  function readSites(servers) {
+    var found = [];
+    Object.keys(servers || {}).forEach(function (name) {
+      var server = servers[name];
+      var listen = (server.listen || [''])[0];
+      collectProxies(server.routes, [], !!server.tls_connection_policies, listen.split(':').pop(), found);
+    });
+    sites = found;
+  }
+
+  function loadSites() {
+    if (sitesRequested) { return; }
+    sitesRequested = true;
+    fetch(BASE + 'config/apps/http/servers', { cache: 'no-store' })
+      .then(function (reply) { return reply.json(); })
+      .then(readSites)
+      .catch(function () { sites = []; })
+      .then(decorateUpstreams);
+  }
+
+  function hostChip(entry, host) {
+    var plain = host.indexOf('*') >= 0;
+    var chip = plain ? element('span', 'forge-host') : link('forge-host', siteAddress(host, entry.secure, entry.port), '');
+    chip.appendChild(element('span', 'forge-host-label', 'Site'));
+    chip.appendChild(document.createTextNode(host + (plain ? '' : ' ↗')));
+    return chip;
+  }
+
+  function decorateUpstreams() {
+    if (!sites || !/\/upstream\/?$/.test(window.location.pathname)) { return; }
+    var cards = document.querySelectorAll('.stat');
+    for (var i = 0; i < cards.length; i++) {
+      var description = cards[i].querySelector('.stat-desc');
+      if (!description || cards[i].querySelector('.forge-hosts')) { continue; }
+      var dial = description.textContent.trim();
+      var list = element('div', 'forge-hosts');
+      sites.filter(function (entry) { return entry.dial === dial; }).forEach(function (entry) {
+        entry.hosts.forEach(function (host) { list.appendChild(hostChip(entry, host)); });
+      });
+      if (list.childNodes.length) { description.parentNode.appendChild(list); }
+    }
+  }
+
   function ensure() {
     if (document.body && !document.getElementById('forge-footer')) {
       document.body.appendChild(build());
       applyAccent();
     }
+    markCurrentPage();
+    if (/\/upstream\/?$/.test(window.location.pathname)) {
+      loadSites();
+      decorateUpstreams();
+    }
   }
 
   function start() {
     setTimeout(ensure, 300);
-    new MutationObserver(ensure).observe(document.body, { childList: true });
+    var pending = false;
+    // The app re-renders on navigation and when its numbers refresh; everything above is put back afterwards.
+    new MutationObserver(function () {
+      if (pending) { return; }
+      pending = true;
+      window.requestAnimationFrame(function () { pending = false; ensure(); });
+    }).observe(document.body, { childList: true, subtree: true, characterData: true });
   }
 
   // ---- start -----------------------------------------------------------------------------------
