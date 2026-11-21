@@ -149,6 +149,12 @@ configuration:
       value:
         name: Value
         description: Variable value. Secrets can reference Home Assistant's secrets.yaml with !secret.
+  takeover:
+    name: Take over the Caddy 2 and CaddyBuilder apps
+    description: >-
+      Switch on once and start the app: it reads the build command of the CaddyBuilder app (plugins, commented-out ones as
+      disabled entries, Caddy version) and the Caddyfile of the Caddy 2 app, enters them into these options, switches itself
+      off again and restarts. Existing entries are kept. Values of environment variables are not available and must be entered.
   format_caddyfile:
     name: Format Caddyfile
     description: Tidy up the indentation of your own Caddyfile on every start (mode "caddyfile" only).

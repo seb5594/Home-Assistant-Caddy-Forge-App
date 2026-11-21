@@ -44,25 +44,47 @@ migrate_nginx() {
 # Caddy 2 app
 # ------------------------------------------------------------------------------
 
-: "${FORGE_ADDON_CONFIGS_DIR:=/addon_configs}"
-# The folder is named <repository hash>_<slug>.
-CADDY2_FOLDER_PATTERNS=('*_caddy-2' '*_caddy_2')
+# Where the config folders of all apps are mounted: /addon_configs with the legacy map type
+# (`all_addon_configs`, which this app uses so that it also installs on older Home Assistant versions),
+# /app_configs with the new one (`all_app_configs`). Both are looked at; FORGE_APP_CONFIG_ROOTS
+# (space separated) replaces them, which is how the tests use it.
+migrate_config_roots() {
+  # shellcheck disable=SC2086  # a list of folders, split on purpose
+  printf '%s\n' ${FORGE_APP_CONFIG_ROOTS:-/app_configs /addon_configs}
+}
 MIGRATE_MAX_FILE_KB=5120
 MIGRATE_MAX_FILES=200
 
-# Prints the config folder of the Caddy 2 app, if it has a Caddyfile or its own Caddy binary.
-migrate_caddy2_folder() {
-  local pattern folder
-  for pattern in "${CADDY2_FOLDER_PATTERNS[@]}"; do
-    # shellcheck disable=SC2231  # the pattern is a glob on purpose
-    for folder in "$FORGE_ADDON_CONFIGS_DIR"/$pattern; do
-      if [[ -d $folder && (-f $folder/Caddyfile || -f $folder/caddy) ]]; then
-        printf '%s' "$folder"
-        return 0
-      fi
+# Prints the config folder of an app: <folder patterns, space separated> <marker files...>. A folder
+# counts when it holds at least one of the marker files. The folder is named <repository hash>_<slug>.
+migrate_app_folder() {
+  local patterns=$1 root pattern folder marker
+  shift
+  while IFS= read -r root; do
+    for pattern in $patterns; do
+      # shellcheck disable=SC2231  # the pattern is a glob on purpose
+      for folder in "$root"/$pattern; do
+        [[ -d $folder ]] || continue
+        for marker in "$@"; do
+          if [[ -f $folder/$marker ]]; then
+            printf '%s' "$folder"
+            return 0
+          fi
+        done
+      done
     done
-  done
+  done < <(migrate_config_roots)
   return 1
+}
+
+# The Caddy 2 app (Caddyfile and optionally its own `caddy` binary).
+migrate_caddy2_folder() {
+  migrate_app_folder '*_caddy-2 *_caddy_2' Caddyfile caddy
+}
+
+# The CaddyBuilder app, whose build command is the file xcaddyCommand.sh.
+migrate_builder_folder() {
+  migrate_app_folder '*_caddybuilder *_caddy-builder *_caddy_builder' xcaddyCommand.sh
 }
 
 # Simple mode: tells once per start that an import is possible.
@@ -112,6 +134,11 @@ migrate_adjust_upstreams() {
   fi
 }
 
+# Names of the environment variables a Caddyfile uses (`{$NAME}` or `{env.NAME}`), one per line.
+migrate_variable_names() {
+  grep -o -E '[{](\$|env[.])[A-Za-z_][A-Za-z0-9_]*' "$1" | sed -E 's/^[{](\$|env[.])//' | sort -u || true
+}
+
 # Environment variables are not copied (they live in the other app's options): name the ones the
 # imported Caddyfile needs and that are not defined here yet.
 migrate_report_variables() {
@@ -121,18 +148,23 @@ migrate_report_variables() {
     if [[ -z $(jq -r --arg n "$name" '.env_vars[]? | select(.name == $n) | .name' "$OPTIONS_FILE") ]]; then
       missing+=("$name")
     fi
-  done < <(grep -o -E '[{](\$|env[.])[A-Za-z_][A-Za-z0-9_]*' "$file" | sed -E 's/^[{](\$|env[.])//' | sort -u)
+  done < <(migrate_variable_names "$file")
   if ((${#missing[@]} > 0)); then
     log_warn "The imported Caddyfile uses the environment variables ${missing[*]}. Add them under 'Environment variables'; their values were not copied."
   fi
 }
 
+# The plugin packages of a custom Caddy binary, one per line (the binary is started once, with a time limit).
+migrate_binary_plugins() {
+  [[ -x $1 ]] || return 0
+  timeout 20 "$1" list-modules --skip-standard --packages 2>/dev/null \
+    | awk 'NF == 2 && $2 !~ /caddyserver\/caddy\/v2$/ { print $2 }' | sort -u || true
+}
+
 # The plugins of the other app's custom binary, as a list ready for the 'Plugins' option.
 migrate_report_plugins() {
-  local folder=$1 binary="$1/caddy" plugins
-  [[ -x $binary ]] || return 0
-  plugins=$(timeout 20 "$binary" list-modules --skip-standard --packages 2>/dev/null \
-    | awk 'NF == 2 && $2 !~ /caddyserver\/caddy\/v2$/ { print $2 }' | sort -u | tr '\n' ' ') || plugins=''
+  local plugins
+  plugins=$(migrate_binary_plugins "$1/caddy" | tr '\n' ' ')
   if [[ -n ${plugins// /} ]]; then
     log_warn "The custom Caddy of the Caddy 2 app contains these plugins; add them under 'Plugins' (one entry each): ${plugins% }"
   fi

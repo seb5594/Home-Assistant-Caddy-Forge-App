@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026.11.21.6
+
+- ✨ **Take over the Caddy 2 and CaddyBuilder apps:** one switch reads the build command of CaddyBuilder (Caddy version and `--with` plugins, commented-out ones as disabled entries) and the Caddyfile of Caddy 2, enters them into this app's options, switches itself off and restarts. Existing entries are kept.
+- 🔧 Works with both spellings of the config folder mount: `/addon_configs` (legacy map type, understood by every Home Assistant version) and `/app_configs`.
+- 🔒 The app now uses the Supervisor API (`hassio_api`) for its own options and its own restart.
+
 ## 2026.11.21.5
 
 - ✨ The Caddyfile of the Caddy 2 app is imported automatically when the mode is `advanced (caddyfile)` and no Caddyfile exists yet, together with the small files next to it. `localhost:8123` becomes `homeassistant:8123`; missing environment variables, plugins of the old binary and other `localhost` addresses are named in the log.
