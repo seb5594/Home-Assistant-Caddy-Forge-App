@@ -8,6 +8,8 @@ test_caddyfile() {
   local output
   output=$(caddyfile_generate)
 
+  assert_contains "$output" "http_port 8080" "caddyfile: HTTP is served on 8080, the app has no port mapping on the host network"
+  assert_contains "$output" "admin off" "caddyfile: the admin API stays off unless the admin UI needs it"
   assert_contains "$output" "email admin@example.org" "caddyfile: the contact email is set"
   assert_contains "$output" "acme_ca https://acme-staging-v02.api.letsencrypt.org/directory" "caddyfile: the staging authority is selectable"
   assert_contains "$output" "trusted_proxies static 10.0.0.0/8" "caddyfile: trusted proxies are listed"

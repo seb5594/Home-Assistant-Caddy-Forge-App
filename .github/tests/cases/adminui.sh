@@ -31,6 +31,7 @@ test_adminui() {
   local output
   output=$(adminui_generate)
   assert_contains "$output" "http://:5594 {" "admin UI: it listens on its own port"
+  assert_not_contains "$(caddyfile_global_block)" "admin off" "admin UI: the admin API it needs is not switched off"
   assert_contains "$output" "client_ip private_ranges" "admin UI: only private networks may connect"
   assert_contains "$output" "caddy_admin_ui" "admin UI: the plugin's handler serves the pages"
   assert_contains "$output" "reverse_proxy localhost:2019" "admin UI: everything else goes to the admin API"
