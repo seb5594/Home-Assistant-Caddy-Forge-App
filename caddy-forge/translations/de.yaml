@@ -1,0 +1,120 @@
+configuration:
+  mode:
+    name: Modus
+    description: >-
+      „simple“ erzeugt die Caddyfile aus den Optionen unten. „caddyfile“ startet deine eigene Datei
+      (die Caddyfile im Konfigurationsordner der App), die beim ersten Mal aus den einfachen Optionen angelegt wird.
+  log_level:
+    name: Log-Level
+    description: Ausführlichkeit der App und, im einfachen Modus, von Caddy.
+  caddy:
+    name: Caddy-Build
+    description: Welches Caddy läuft und welche Plugins hineinkompiliert werden.
+    fields:
+      version:
+        name: Caddy-Version
+        description: >-
+          Fest gepinnte Upstream-Version wie 2.11.9 oder „latest“, um neuen Releases zu folgen. Die gepinnte
+          Standardversion steckt in der App und startet sofort; alles andere und jedes Plugin löst einen Build aus.
+      modules:
+        name: Plugins
+        description: >-
+          Ein Go-Modul pro Eintrag, z. B. github.com/caddy-dns/cloudflare. Mit @version wird ein Plugin
+          gepinnt, ohne Version folgt es dem neuesten Release. Zeilen aus xcaddy (--with …) werden akzeptiert.
+      updates:
+        name: Update-Prüfung beim Start
+        description: >-
+          „install“ baut neu, wenn „latest“ oder ein ungepinntes Plugin eine neuere Version hat, „notify“
+          schreibt es nur ins Log, „off“ überspringt die Prüfung und braucht kein Internet.
+      start_server:
+        name: Webserver starten
+        description: Ausschalten, um nur nach Updates zu suchen und die Binary zu bauen; danach stoppt die App.
+  simple:
+    name: Einfacher Modus
+    description: Alles, was Caddy für typische Setups braucht, ohne eine Caddyfile zu schreiben.
+    fields:
+      email:
+        name: E-Mail-Adresse
+        description: Kontaktadresse für die Zertifizierungsstelle (Ablaufhinweise).
+      acme_ca:
+        name: Zertifizierungsstelle
+        description: >-
+          „auto“ behält Caddys Standard (Let's Encrypt, ZeroSSL als Ersatz). Mit „staging“ testest du ohne
+          Rate-Limits.
+      dns_provider:
+        name: DNS-Anbieter
+        description: >-
+          Zertifikate per DNS statt über Port 80 validieren; so sind auch Wildcard-Domains möglich.
+          Name eines Anbieter-Moduls, z. B. cloudflare. Das Plugin wird automatisch mitgebaut.
+      dns_token:
+        name: DNS-API-Token
+        description: Zugriffstoken des DNS-Anbieters.
+      trusted_proxies:
+        name: Vertrauenswürdige Proxys
+        description: Netze von Proxys oder Tunneln vor Caddy, deren weitergereichte Client-Adressen geglaubt werden.
+      compression:
+        name: Komprimierung
+        description: Antworten mit zstd oder gzip komprimieren.
+      security_headers:
+        name: Sicherheits-Header
+        description: >-
+          Übliche Schutz-Header und HSTS hinzufügen (HSTS nur bei öffentlich vertrauten Zertifikaten).
+      access_log:
+        name: Zugriffslog
+        description: Pro Anfrage eine Logzeile schreiben.
+      sites:
+        name: Seiten
+        description: Ein Eintrag pro Website oder Dienst.
+        fields:
+          domain:
+            name: Domain
+            description: >-
+              Adresse, die Besucher nutzen, z. B. hass.example.com. Mehrere Adressen mit Komma trennen;
+              Wildcards wie *.example.com brauchen einen DNS-Anbieter.
+          type:
+            name: Typ
+            description: >-
+              „proxy“ leitet an einen Dienst weiter, „static“ liefert einen Ordner aus, „redirect“ schickt Besucher woandershin.
+          target:
+            name: Ziel
+            description: >-
+              Proxy: wo der Dienst lauscht, z. B. homeassistant:8123 oder https://192.168.1.5:8006.
+              Static: ein Ordner wie /share/www oder /media. Redirect: die Adresse, zu der weitergeleitet wird.
+          tls:
+            name: Zertifikat
+            description: >-
+              „auto“ holt ein kostenloses öffentliches Zertifikat. „internal“ nutzt Caddys eigene Stelle für lokale Namen.
+              „custom“ nimmt /ssl/fullchain.pem und /ssl/privkey.pem. „off“ liefert reines HTTP.
+          skip_verify:
+            name: Zertifikatsprüfung des Ziels überspringen
+            description: Für HTTPS-Ziele mit selbstsigniertem Zertifikat.
+          auth_user:
+            name: Benutzername
+            description: Schützt die Seite mit einem Login. Leer lassen für keinen Schutz.
+          auth_password:
+            name: Passwort
+            description: Klartext oder bcrypt-Hash; Klartext wird beim Start gehasht.
+          allow_from:
+            name: Erlaubte Netze
+            description: >-
+              Nur diese Netze dürfen die Seite öffnen, z. B. 192.168.0.0/16. Leer lassen, um alle zuzulassen.
+          extra:
+            name: Zusätzliche Direktiven
+            description: Eine Caddyfile-Zeile pro Eintrag für diese Seite, z. B. header X-Robots-Tag noindex.
+  env_vars:
+    name: Umgebungsvariablen
+    description: Für Caddy als {env.NAME} verfügbar, etwa für Tokens in deiner eigenen Caddyfile.
+    fields:
+      name:
+        name: Name
+        description: Variablenname aus Buchstaben, Ziffern und Unterstrichen.
+      value:
+        name: Wert
+        description: Wert der Variable. Geheimnisse lassen sich mit !secret aus der secrets.yaml von Home Assistant holen.
+  format_caddyfile:
+    name: Caddyfile formatieren
+    description: Räumt die Einrückung deiner eigenen Caddyfile bei jedem Start auf (nur im Modus „caddyfile“).
+network:
+  80/tcp: HTTP, wird auch zur Zertifikatsprüfung genutzt
+  443/tcp: HTTPS
+  443/udp: HTTP/3 (QUIC)

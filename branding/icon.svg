@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="ring" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#2563EB"/>
+      <stop offset="0.55" stop-color="#14B8A6"/>
+      <stop offset="1" stop-color="#4ADE80"/>
+    </linearGradient>
+    <linearGradient id="lock" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#34D399"/>
+      <stop offset="1" stop-color="#16A34A"/>
+    </linearGradient>
+  </defs>
+  <path d="M 224.4 89.0 A 104 104 0 1 1 167.0 31.6" fill="none" stroke="url(#ring)" stroke-width="15" stroke-linecap="round"/>
+  <path d="M 100 124 V 100 a 28 28 0 0 1 56 0 V 124" fill="none" stroke="url(#lock)" stroke-width="15" stroke-linecap="round"/>
+  <rect x="82" y="120" width="92" height="76" rx="14" fill="url(#lock)"/>
+  <path transform="translate(128 158) scale(1.4) translate(-128 -158)" d="M 100 148 H 156 V 155 H 147 L 142 161 H 149 V 170 H 107 V 161 H 114 L 119 155 H 111 Q 103 155 100 148 Z" fill="#F0FDF4"/>
+  <g fill="#FBBF24" stroke="#FBBF24" stroke-linecap="round">
+    <circle cx="207" cy="52" r="6" stroke="none"/>
+    <circle cx="231" cy="86" r="4" stroke="none"/>
+    <path d="M 221 38 L 232 28" stroke-width="5"/>
+    <circle cx="190" cy="30" r="3.5" stroke="none"/>
+  </g>
+</svg>
