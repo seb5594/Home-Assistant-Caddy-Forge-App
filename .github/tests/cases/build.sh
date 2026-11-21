@@ -39,6 +39,7 @@ test_real_build() {
   assert_equals "200" "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8099/)" "admin UI: the page is served"
   assert_contains "$(curl -s http://localhost:8099/)" '<script src="/_forge/footer.js" defer></script></body>' "admin UI: the footer script is injected into the page"
   assert_contains "$(curl -s http://localhost:8099/_forge/footer.js)" "Sebastian Schmidt" "admin UI: the footer script is served"
+  assert_equals "Home Assistant" "$(curl -s http://localhost:8099/_forge/palette.json | jq -r '.presets[0].name')" "admin UI: the colour palette is served"
   assert_contains "$(curl -s -H 'Accept-Encoding: gzip' http://localhost:8099/)" "</html>" "admin UI: pages stay readable for browsers that accept compression"
   assert_contains "$(curl -s http://localhost:8099/config/)" '"apps"' "admin UI: the admin API answers through it"
   assert_equals "403" "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8099/ws/pty)" "admin UI: the web shell stays closed"

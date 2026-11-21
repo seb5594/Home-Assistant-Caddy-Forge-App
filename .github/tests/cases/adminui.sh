@@ -3,6 +3,38 @@
 # shellcheck disable=SC2016  # the stand-in binary is a shell script written verbatim
 # The optional admin UI and the nginx helper.
 
+# Home Assistant themes as a user would have them in /config/themes.
+make_themes() {
+  mkdir -p "$TEST_TMP/themes"
+  printf '%s\n' '# my themes' 'Ocean Blue:' '  primary-color: "#1e88e5"   # main' '  accent-color: "#ff9800"' \
+    'Forest:' '  modes:' '    light:' "      primary-color: '#2e7d32'" '    dark:' '      primary-color: "#66bb6a"' \
+    'Linked:' '  primary-color: var(--blue-color)' 'Plain:' '  primary-color: rgb(10, 20, 30)' >"$TEST_TMP/themes/themes.yaml"
+  export FORGE_HA_THEMES_DIR="$TEST_TMP/themes"
+}
+
+test_accent() {
+  use_clean_folders
+  make_themes
+  assert_equals $'Ocean Blue\t#1e88e5\nForest\t#2e7d32\nPlain\trgb(10, 20, 30)' "$(adminui_themes)" "accent: themes and their primary colours are read from Home Assistant's folder"
+
+  use_options '.admin_ui.enabled = true'
+  assert_equals "" "$(adminui_default_accent)" "accent: Home Assistant blue is the default"
+  use_options '.admin_ui.accent = "#ff0000"'
+  assert_equals "#ff0000" "$(adminui_default_accent)" "accent: a colour is taken as it is"
+  use_options '.admin_ui.accent = "ocean blue"'
+  assert_equals "#1e88e5" "$(adminui_default_accent)" "accent: a theme name follows that theme's colour, whatever its case"
+  use_options '.admin_ui.accent = "No Such Theme"'
+  assert_contains "$(adminui_default_accent 2>&1)" "neither a colour nor a theme" "accent: an unknown theme is reported"
+
+  use_options '.admin_ui.accent = "Forest"'
+  adminui_write_palette
+  local palette="$FORGE_DATA_DIR/admin-ui/palette.json"
+  assert_equals "#2e7d32" "$(jq -r .default "$palette")" "accent: the palette carries the default accent"
+  assert_equals "Home Assistant" "$(jq -r '.presets[0].name' "$palette")" "accent: Home Assistant blue is the first preset"
+  assert_equals "3" "$(jq '.themes | length' "$palette")" "accent: the user's themes are part of the palette"
+  assert_contains "$(adminui_generate)" "handle /_forge/palette.json" "accent: the palette is served next to the page script"
+}
+
 test_adminui() {
   use_clean_folders
   use_options '.admin_ui.enabled = true'
