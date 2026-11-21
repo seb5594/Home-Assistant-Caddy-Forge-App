@@ -11,6 +11,8 @@ MODULE_PATTERN='^[A-Za-z0-9._~-]+(/[A-Za-z0-9._~-]+)+(@[A-Za-z0-9._+~/-]+)?(=[^[
 DNS_PROVIDER_PATTERN='^[a-z0-9][a-z0-9_-]*$'
 DNS_MODULE_PREFIX='github.com/caddy-dns/'
 ADMIN_UI_MODULE='github.com/gsmlg-dev/caddy-admin-ui'
+# Rewrites the UI's pages on their way out, which is how the footer gets in.
+ADMIN_UI_REPLACE_MODULE='github.com/caddyserver/replace-response'
 
 # Normalizes raw module lines (stdin) into one specification per line (stdout).
 # People paste lines straight from xcaddy commands, so a leading `--with`, trailing
@@ -88,7 +90,7 @@ modules_requested() {
     specs=$(printf '%s\n' "$specs" | modules_add_unless_present "$DNS_MODULE_PREFIX$provider")
   fi
   if option_is_true .admin_ui.enabled; then
-    specs=$(printf '%s\n' "$specs" | modules_add_unless_present "$ADMIN_UI_MODULE")
+    specs=$(printf '%s\n' "$specs" | modules_add_unless_present "$ADMIN_UI_MODULE" | modules_add_unless_present "$ADMIN_UI_REPLACE_MODULE")
   fi
   specs=$(printf '%s\n' "$specs" | awk 'NF')
   printf '%s\n' "$specs" | modules_validate

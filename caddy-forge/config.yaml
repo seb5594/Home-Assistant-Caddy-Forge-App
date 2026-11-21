@@ -1,5 +1,5 @@
 name: Caddy Forge
-version: 2026.11.21.1
+version: 2026.11.21.2
 slug: caddy-forge
 description: Caddy web server that builds itself with the plugins you name.
 url: https://github.com/seb5594/Home-Assistant-Caddy-Webserver-App
