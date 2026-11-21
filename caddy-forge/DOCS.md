@@ -124,6 +124,11 @@ admin endpoint at its default address `localhost:2019`.
 It is not part of Home Assistant's sidebar (ingress) because it is a single-page app with absolute links that cannot live below an
 ingress path. Its built-in web shell is never enabled and its endpoint is blocked.
 
+### Importing from the Caddy 2 app
+
+In `advanced (caddyfile)` mode, a Caddyfile of the *Caddy 2* app is imported once if this app's config folder has none yet.
+For that the app reads the config folders of all apps read-only (`all_addon_configs`) and looks only at those named `*_caddy-2`.
+
 ### Environment variables
 
 Available to Caddy as `{env.NAME}`. Values can point into Home Assistant's `secrets.yaml` with `!secret`.
@@ -145,6 +150,7 @@ Turn on **Format Caddyfile** to let Caddy tidy the indentation on every start.
 ## Examples and migration
 
 * [Practical examples](https://github.com/seb5594/Home-Assistant-Caddy-Forge-App/blob/dev/docs/examples.md): a private homepage, a site from git, PHP and single-page apps, wildcard certificates, LAN-only services.
+* [Moving from the Caddy 2 app](https://github.com/seb5594/Home-Assistant-Caddy-Forge-App/blob/dev/docs/migrating-from-the-caddy-2-app.md): the Caddyfile is imported when you switch to the advanced mode; the options are mapped in the guide.
 * [Moving from nginx or Apache](https://github.com/seb5594/Home-Assistant-Caddy-Forge-App/blob/dev/docs/migrating-from-nginx-and-apache.md): directive tables, a worked example and an
   adapter that reads a `nginx.conf` dropped into the `migrate` folder.
 
