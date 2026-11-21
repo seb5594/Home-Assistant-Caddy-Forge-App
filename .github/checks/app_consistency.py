@@ -60,8 +60,16 @@ def check_pinned_caddy_version(config):
         f"config.yaml defaults to Caddy {default}, but the Dockerfile ships {shipped.group(1)}"
 
 
+def check_log_level_first(config):
+    """The Supervisor lists options in schema order, and the log level comes first for every user."""
+    for section in ("options", "schema"):
+        first = next(iter(config[section]))
+        assert first == "log_level", f"{section} must start with log_level, not {first}"
+
+
 def main():
     config = yaml.safe_load((APP / "config.yaml").read_text())
+    check_log_level_first(config)
     check_pinned_caddy_version(config)
     check_against_schema(config["options"], config["schema"])
     check_against_schema(json.loads(FIXTURE.read_text()), config["schema"])
