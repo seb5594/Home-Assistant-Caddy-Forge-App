@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026.11.21.4
+
+- ✨ Plugins are entries with a **plugin**, an optional **version** (tag, branch or commit) and an **enabled** switch. `owner/repo` is taken from github.com; module paths and repository URLs of other hosts work as well. The plugin hint links to a list of Caddy modules.
+- 🔧 The HTTP port defaults to host port 8080, the admin UI listens on port 5594 inside the container.
+- 🔧 The accent colour option is gone; the admin UI starts in a light blue and visitors pick their own in the footer.
+- 🔧 The mode `caddyfile` is called `advanced (caddyfile)` (the old value is still understood).
+- ⚠️ Plugin lists saved by an earlier version have to be entered again, because each plugin is now an entry instead of a text line.
+- 📄 The license file carries the copyright notice.
+
 ## 2026.11.21.3
 
 - ✨ The admin UI has an accent colour: a palette in the page footer (presets, the primary colours of your Home Assistant themes and a free colour picker) that is remembered per browser.

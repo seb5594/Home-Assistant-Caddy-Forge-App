@@ -11,10 +11,10 @@ Rewrite one virtual host at a time instead of translating the whole file.
 2. **One site entry per host.** Most hosts fit the app's **Sites** list (domain, type, target, certificate, login,
    allowed networks). Special lines go into the site's **Extra directives**, one Caddyfile line per row.
 3. **Test with the staging authority** (`Certificate authority: staging`) until everything answers, then switch to `auto`.
-4. **Switch over.** Stop the old server, point the router's ports 80 and 443 at Home Assistant and start the app. Delete
+4. **Switch over.** Stop the old server, point the router's ports 80 (to the app's host port 8080) and 443 at Home Assistant and start the app. Delete
    certbot cron jobs and renewal hooks; Caddy does that itself.
 
-When a host needs more than the form offers, set the mode to `caddyfile` and write the Caddyfile directly: the
+When a host needs more than the form offers, set the mode to `advanced (caddyfile)` and write the Caddyfile directly: the
 mapping tables below are exactly that vocabulary.
 
 ## nginx → Caddy

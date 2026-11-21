@@ -28,7 +28,7 @@ brauchst du kein Caddyfile-Wissen; wenn das nicht reicht, gibt es einen vollwert
 ## Loslegen
 
 1. Dieses Repository im Home-Assistant-App-Store hinzufügen, **Caddy Forge** installieren und die Konfiguration öffnen.
-2. Deine Domain in die Standard-Seite eintragen, den Zertifikatstyp wählen und die Ports 80 und 443 weiterleiten.
+2. Deine Domain in die Standard-Seite eintragen, den Zertifikatstyp wählen und die Ports 80 (die App lauscht auf Host-Port 8080) und 443 weiterleiten.
 3. In den `http:`-Einstellungen von Home Assistant `use_x_forwarded_for` und `trusted_proxies` ergänzen.
 4. App starten.
 
@@ -39,7 +39,10 @@ mode: simple
 caddy:
   version: 2.11.9
   modules:
-    - github.com/hslatman/caddy-crowdsec-bouncer
+    - module: hslatman/caddy-crowdsec-bouncer     # owner/repo wird auf github.com gesucht
+      version: main                               # optional Tag, Branch oder Commit
+    - module: mholt/caddy-l4
+      enabled: false                              # bleibt erhalten, wird aber nicht mitgebaut
   updates: install
 simple:
   email: du@example.org

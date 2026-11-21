@@ -11,7 +11,7 @@ Konfigurationseditor der App speichert). Du kannst beliebig viele anlegen; sie l
   target: homeassistant:8123
 ```
 
-E-Mail-Adresse im einfachen Modus setzen, Ports 80 und 443 weiterleiten und `trusted_proxies` in Home Assistant
+E-Mail-Adresse im einfachen Modus setzen, Ports 80 (auf den Host-Port 8080 der App) und 443 weiterleiten und `trusted_proxies` in Home Assistant
 ergänzen (siehe App-Dokumentation). Das Zertifikat wird automatisch angefordert und erneuert.
 
 ## 2. Eine private Homepage für dich oder die Familie
@@ -118,12 +118,11 @@ Wer nicht aus den genannten Netzen kommt, bekommt nur „Forbidden“; im Netz w
 
 Aktiviere **Admin-Oberfläche** in der Konfiguration. Die App nimmt das Plugin
 [`caddy-admin-ui`](https://github.com/gsmlg-dev/caddy-admin-ui) in den nächsten Build auf und liefert es auf Port
-**8099** aus (Port unter *Netzwerk* aktivieren, dann auf der App-Seite *Web-UI öffnen* nutzen). Du siehst die laufende
+**5594** aus (Port unter *Netzwerk* aktivieren, dann auf der App-Seite *Web-UI öffnen* nutzen). Du siehst die laufende
 Konfiguration, Upstreams und Metriken; Änderungen dort leben nur im Speicher bis zum nächsten Start, die Optionen bleiben
 die maßgebliche Quelle.
 
-Farben: Setze die **Akzentfarbe** auf eine Farbe oder den Namen eines deiner Home-Assistant-Themes; Besucher wählen im Seitenfuß
-ihre eigene aus der Palette. Öffne sie über die IP-Adresse oder einen lokalen Namen, z. B. `homeassistant.local:8099`. Zur Absicherung: Nur private Netze dürfen zugreifen, ein Login lässt sich ergänzen, Anfragen von fremden Webseiten werden
+Farben: Die Oberfläche startet in einem hellen Blau; Besucher wählen im Seitenfuß ihre eigene Farbe aus der Palette. Öffne sie über die IP-Adresse oder einen lokalen Namen, z. B. `homeassistant.local:5594`. Zur Absicherung: Nur private Netze dürfen zugreifen, ein Login lässt sich ergänzen, Anfragen von fremden Webseiten werden
 abgewiesen, und die eingebaute Web-Shell des Plugins bleibt aus, ihr Endpunkt ist gesperrt. Die Oberfläche ist eine
 Single-Page-App mit absoluten Links, darum gibt es sie auf einem eigenen Port und nicht in der Seitenleiste von Home
 Assistant (Ingress).

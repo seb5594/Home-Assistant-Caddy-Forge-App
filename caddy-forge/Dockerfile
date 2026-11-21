@@ -28,13 +28,13 @@ RUN apk add --no-cache \
 ENV GOTOOLCHAIN=auto \
     CGO_ENABLED=0
 
-ARG BUILD_VERSION=2026.11.21.3
+ARG BUILD_VERSION=2026.11.21.4
 ARG BUILD_ARCH=amd64
 ENV APP_VERSION=${BUILD_VERSION}
 LABEL io.hass.version="${BUILD_VERSION}" \
     io.hass.type="addon" \
     io.hass.arch="${BUILD_ARCH}" \
-    org.opencontainers.image.source="https://github.com/seb5594/Home-Assistant-Caddy-Webserver-App"
+    org.opencontainers.image.source="https://github.com/seb5594/Home-Assistant-Caddy-Forge-App"
 
 COPY rootfs/ /
 COPY run.sh entrypoint.sh /
