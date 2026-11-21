@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026.11.21.5
+
+- ✨ The Caddyfile of the Caddy 2 app is imported automatically when the mode is `advanced (caddyfile)` and no Caddyfile exists yet, together with the small files next to it. `localhost:8123` becomes `homeassistant:8123`; missing environment variables, plugins of the old binary and other `localhost` addresses are named in the log.
+- 🔒 For this the config folders of all apps are mounted read-only (`all_addon_configs`); only folders named `*_caddy-2` are looked at.
+- 📚 Migration guide with a mapping of the Caddy 2 app's options.
+
 ## 2026.11.21.4
 
 - ✨ Plugins are entries with a **plugin**, an optional **version** (tag, branch or commit) and an **enabled** switch. `owner/repo` is taken from github.com; module paths and repository URLs of other hosts work as well. The plugin hint links to a list of Caddy modules.

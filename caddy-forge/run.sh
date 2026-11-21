@@ -74,10 +74,11 @@ prepare_caddyfile() {
   case "$mode" in
     simple)
       caddyfile_write "$GENERATED_CADDYFILE"
+      migrate_caddy2_hint "$USER_CADDYFILE"
       CADDYFILE_BASE=$GENERATED_CADDYFILE
       ;;
     "advanced (caddyfile)" | caddyfile)
-      caddyfile_seed_pro_mode "$USER_CADDYFILE"
+      migrate_caddy2_import "$USER_CADDYFILE" || caddyfile_seed_pro_mode "$USER_CADDYFILE"
       if option_is_true .format_caddyfile; then
         "$FORGE_BUNDLED_CADDY" fmt --overwrite "$USER_CADDYFILE" || log_warn "Could not format $USER_CADDYFILE"
       fi

@@ -1,7 +1,13 @@
 #!/usr/bin/env bash
 # shellcheck shell=bash
 # ==============================================================================
-# Moving from nginx: if a nginx.conf is dropped into the config folder's `migrate`
+# Moving from other setups.
+#
+# Caddy 2 app: its Caddyfile (and the small files next to it) is imported when the mode is
+# switched to "advanced (caddyfile)" and no Caddyfile exists here yet. The app's config folder is
+# readable through the `all_addon_configs` mount, read-only.
+#
+# nginx: if a nginx.conf is dropped into the config folder's `migrate`
 # folder and the nginx adapter plugin is part of the binary, it is converted on start.
 # The adapter writes Caddy's JSON format; it is a starting point for rewriting the
 # setup as sites, not a replacement (the adapter covers only part of nginx).
@@ -31,5 +37,125 @@ migrate_nginx() {
     fi
   done <"$dir/.adapter.log"
   rm -f "$dir/.adapter.log"
+  return 0
+}
+
+# ------------------------------------------------------------------------------
+# Caddy 2 app
+# ------------------------------------------------------------------------------
+
+: "${FORGE_ADDON_CONFIGS_DIR:=/addon_configs}"
+# The folder is named <repository hash>_<slug>.
+CADDY2_FOLDER_PATTERNS=('*_caddy-2' '*_caddy_2')
+MIGRATE_MAX_FILE_KB=5120
+MIGRATE_MAX_FILES=200
+
+# Prints the config folder of the Caddy 2 app, if it has a Caddyfile or its own Caddy binary.
+migrate_caddy2_folder() {
+  local pattern folder
+  for pattern in "${CADDY2_FOLDER_PATTERNS[@]}"; do
+    # shellcheck disable=SC2231  # the pattern is a glob on purpose
+    for folder in "$FORGE_ADDON_CONFIGS_DIR"/$pattern; do
+      if [[ -d $folder && (-f $folder/Caddyfile || -f $folder/caddy) ]]; then
+        printf '%s' "$folder"
+        return 0
+      fi
+    done
+  done
+  return 1
+}
+
+# Simple mode: tells once per start that an import is possible.
+migrate_caddy2_hint() {
+  local target=$1 folder
+  [[ -e $target ]] && return 0
+  folder=$(migrate_caddy2_folder) || return 0
+  if [[ -f $folder/Caddyfile ]]; then
+    log_info "Found the Caddyfile of the Caddy 2 app. Set the mode to 'advanced (caddyfile)' to import it."
+  fi
+}
+
+# Copies the small files next to the Caddyfile (snippets, a www folder) so that `/config/...` paths in the
+# imported Caddyfile keep working. The binary and the Caddyfile itself are left out, existing files stay.
+migrate_copy_companions() {
+  local source=$1 target=$2 copied=0 skipped=0 file
+  while IFS= read -r file; do
+    [[ -n $file && ! -e $target/$file ]] || continue
+    if ((copied >= MIGRATE_MAX_FILES)); then
+      skipped=$((skipped + 1))
+      continue
+    fi
+    mkdir -p "$target/$(dirname "$file")"
+    cp "$source/$file" "$target/$file"
+    copied=$((copied + 1))
+  done < <(cd "$source" && find . -type f ! -path ./caddy ! -path ./Caddyfile ! -size +"${MIGRATE_MAX_FILE_KB}k" | sed 's|^\./||')
+  if ((copied > 0)); then
+    log_info "Copied $copied more file(s) from the Caddy 2 app's folder."
+  fi
+  if ((skipped > 0)); then
+    log_warn "Skipped $skipped file(s): at most $MIGRATE_MAX_FILES files of up to $((MIGRATE_MAX_FILE_KB / 1024)) MB are copied."
+  fi
+}
+
+# The Caddy 2 app runs on the host network, where Home Assistant is `localhost:8123`. Here it is
+# `homeassistant:8123`; other local addresses cannot be guessed, so they are only pointed out.
+migrate_adjust_upstreams() {
+  local file=$1 changed others
+  changed=$(grep -c -E '(localhost|127[.]0[.]0[.]1|\[::1\]):8123' "$file" || true)
+  if ((changed > 0)); then
+    sed -i -E 's/(localhost|127[.]0[.]0[.]1|\[::1\]):8123/homeassistant:8123/g' "$file"
+    log_info "Changed $changed address(es) from localhost:8123 to homeassistant:8123, because this app does not use the host network."
+  fi
+  others=$(grep -v '^[[:space:]]*#' "$file" | grep -c -E '(localhost|127[.]0[.]0[.]1|\[::1\]):[0-9]+' || true)
+  if ((others > 0)); then
+    log_warn "$others line(s) of the imported Caddyfile still point at localhost or 127.0.0.1. Inside this app that is the app itself: use the address or host name of the service instead."
+  fi
+}
+
+# Environment variables are not copied (they live in the other app's options): name the ones the
+# imported Caddyfile needs and that are not defined here yet.
+migrate_report_variables() {
+  local file=$1 name missing=()
+  while IFS= read -r name; do
+    [[ -n $name ]] || continue
+    if [[ -z $(jq -r --arg n "$name" '.env_vars[]? | select(.name == $n) | .name' "$OPTIONS_FILE") ]]; then
+      missing+=("$name")
+    fi
+  done < <(grep -o -E '[{](\$|env[.])[A-Za-z_][A-Za-z0-9_]*' "$file" | sed -E 's/^[{](\$|env[.])//' | sort -u)
+  if ((${#missing[@]} > 0)); then
+    log_warn "The imported Caddyfile uses the environment variables ${missing[*]}. Add them under 'Environment variables'; their values were not copied."
+  fi
+}
+
+# The plugins of the other app's custom binary, as a list ready for the 'Plugins' option.
+migrate_report_plugins() {
+  local folder=$1 binary="$1/caddy" plugins
+  [[ -x $binary ]] || return 0
+  plugins=$(timeout 20 "$binary" list-modules --skip-standard --packages 2>/dev/null \
+    | awk 'NF == 2 && $2 !~ /caddyserver\/caddy\/v2$/ { print $2 }' | sort -u | tr '\n' ' ') || plugins=''
+  if [[ -n ${plugins// /} ]]; then
+    log_warn "The custom Caddy of the Caddy 2 app contains these plugins; add them under 'Plugins' (one entry each): ${plugins% }"
+  fi
+}
+
+# Imports the Caddyfile of the Caddy 2 app as <target>. Succeeds only if something was imported;
+# an existing Caddyfile is never touched.
+migrate_caddy2_import() {
+  local target=$1 folder scratch
+  [[ -e $target ]] && return 1
+  folder=$(migrate_caddy2_folder) || return 1
+  [[ -f $folder/Caddyfile ]] || return 1
+  scratch=$(mktemp)
+  {
+    printf '# Imported from the Caddy 2 app (%s) on %s.\n# This file is yours now; the app does not change it.\n\n' "$(basename "$folder")" "$(date '+%Y-%m-%d')"
+    cat "$folder/Caddyfile"
+  } >"$scratch"
+  mv -f "$scratch" "$target"
+  chmod 644 "$target"
+  log_info "Imported the Caddyfile of the Caddy 2 app to $target."
+  migrate_adjust_upstreams "$target"
+  migrate_copy_companions "$folder" "$(dirname "$target")"
+  migrate_report_variables "$target"
+  migrate_report_plugins "$folder"
   return 0
 }
