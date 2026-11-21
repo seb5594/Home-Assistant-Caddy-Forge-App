@@ -1,9 +1,42 @@
-# Moving from the Caddy 2 app
+# Moving from the Caddy 2 and CaddyBuilder apps
 
-If you run the *Caddy 2* app with its own `Caddyfile`, Caddy Forge imports that file for you. What can not be read
-from another app (its options) is mapped below.
+Many setups use two apps: *CaddyBuilder* compiles a Caddy with plugins and *Caddy 2* runs it. Caddy Forge does both and can take
+over what the two apps know: the plugins and Caddy version of the build command, and the Caddyfile. What can not be read from
+another app (its options) is mapped below.
 
-## The short way
+## One switch: take over
+
+1. Leave both old apps installed (stopped is fine); the app reads their config folders.
+2. In Caddy Forge, switch on **Take over the Caddy 2 and CaddyBuilder apps** and start the app.
+3. It reads
+   * the build command of CaddyBuilder (`xcaddyCommand.sh`): the **Caddy version** and every `--with` plugin as an entry under
+     *Plugins*, with a pinned tag, branch or commit in the *Version* field. Lines that are commented out in your script become
+     entries that are switched *off*, so nothing is lost and nothing unwanted is built;
+   * the Caddyfile of Caddy 2, which switches the **mode** to `advanced (caddyfile)` (it is imported on the next start, see below);
+     if there is no build command, the plugins of Caddy 2's own `caddy` binary are used instead;
+   * the **environment variable** names that Caddyfile uses; they are added with an empty value for you to fill in.
+4. The app stores the result in its own options, switches **take over** off again and restarts. Entries and settings you already made are kept;
+   the Caddy version only changes while it still is the shipped default.
+5. Check the options, fill in the environment variable values, stop and uninstall the old apps.
+
+Your own `xcaddyCommand.sh` looks like this and becomes the entries on the right:
+
+| Line | Entry |
+| --- | --- |
+| `xcaddy build latest \` | Caddy version `latest` |
+| `--with github.com/caddy-dns/cloudflare \` | `github.com/caddy-dns/cloudflare`, on |
+| `#  --with github.com/mholt/caddy-l4@ef01c22 #@31ae08c` | `github.com/mholt/caddy-l4`, version `ef01c22`, **off** |
+| `# v2.9.1`, `# latest` | ignored (no `--with`) |
+
+The app needs the Supervisor API for this (`hassio_api`, only for its own options and its own restart).
+
+### Old Home Assistant versions
+
+The app asks for the config folders of all apps with the map type `all_addon_configs`, which every Home Assistant version since it
+exists understands and newer ones still accept (they call it `all_app_configs` and mount it at `/app_configs` instead of
+`/addon_configs`). The app looks in both places, so it works on old and new versions alike.
+
+## The short way, Caddyfile only
 
 1. Stop the Caddy 2 app. Both apps want ports 80 and 443.
 2. Install Caddy Forge and set the mode to **advanced (caddyfile)**.

@@ -7,7 +7,7 @@
 
 <p align="center">
   <a href="https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fseb5594%2FHome-Assistant-Apps"><img src="https://img.shields.io/static/v1?label=Home%20Assistant&amp;message=Add%20app%20repository&amp;color=18BCF2&amp;logo=homeassistant&amp;logoColor=white&amp;style=for-the-badge" alt="Home Assistant" height="28"></a><br>
-  <a href="https://github.com/seb5594/Home-Assistant-Caddy-Forge-App/releases"><img src="https://img.shields.io/static/v1?label=app%20version&amp;message=2026.11.21.5&amp;color=1877A5&amp;style=for-the-badge" alt="app version" height="28"></a>
+  <a href="https://github.com/seb5594/Home-Assistant-Caddy-Forge-App/releases"><img src="https://img.shields.io/static/v1?label=app%20version&amp;message=2026.11.21.6&amp;color=1877A5&amp;style=for-the-badge" alt="app version" height="28"></a>
   <img src="https://img.shields.io/static/v1?label=image%20pulls&amp;message=10&amp;color=1877A5&amp;style=for-the-badge" alt="image pulls" height="28"><br>
   <img src="https://img.shields.io/static/v1?label=stage&amp;message=stable&amp;color=2F855A&amp;style=flat" alt="stage" height="20">
   <img src="https://img.shields.io/static/v1?label=arch%20%26%20size&amp;message=amd64%20166.6%20%C2%B7%20aarch64%20153.8%20%C2%B7%20armv7%20137.6%20%C2%B7%20armhf%20143.0%20%C2%B7%20i386%20161.8%20MiB&amp;color=157F71&amp;style=flat" alt="arch &amp; size" height="20">
@@ -43,7 +43,7 @@ setups; a full Caddyfile mode is there when they are not enough.
   logins and allow lists, written as a form instead of a Caddyfile.
 - **Websites from git.** A site type that serves a repository and keeps it current; no plugin needed.
 - **Admin UI.** One switch adds a web front end for Caddy's admin API, reachable from private networks only.
-- **Caddyfile mode.** Seeded from your simple setup the first time, yours from then on. A Caddyfile of the Caddy 2 app is imported automatically.
+- **Caddyfile mode.** Seeded from your simple setup the first time, yours from then on. One switch takes over the plugins and Caddy version of CaddyBuilder and the Caddyfile of Caddy 2, so two apps become one.
 - **Starts instantly by default.** The pinned Caddy release ships in the image; the Go toolchain only
   works when a build is actually needed.
 - **Every architecture:** amd64, aarch64, armv7, armhf and i386. Builds adapt to the free memory and
@@ -87,7 +87,7 @@ The full option reference, update behavior and troubleshooting are in the [app d
 More to read:
 
 - [Practical examples](docs/examples.md): private homepage, website from git, PHP and single-page apps, wildcard certificates
-- [Moving from the Caddy 2 app](docs/migrating-from-the-caddy-2-app.md): automatic Caddyfile import and a mapping of its options
+- [Moving from the Caddy 2 and CaddyBuilder apps](docs/migrating-from-the-caddy-2-app.md): one switch takes over plugins, version and Caddyfile; a mapping of the old options
 - [Moving from nginx or Apache](docs/migrating-from-nginx-and-apache.md): directive tables and a worked example
 
 ## How it works

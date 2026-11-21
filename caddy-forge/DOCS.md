@@ -124,10 +124,18 @@ admin endpoint at its default address `localhost:2019`.
 It is not part of Home Assistant's sidebar (ingress) because it is a single-page app with absolute links that cannot live below an
 ingress path. Its built-in web shell is never enabled and its endpoint is blocked.
 
+### Taking over the Caddy 2 and CaddyBuilder apps
+
+Switch on **Take over the Caddy 2 and CaddyBuilder apps** once to merge two apps into this one: the plugins (commented-out lines as
+disabled entries) and Caddy version of CaddyBuilder's `xcaddyCommand.sh` are entered under *Plugins* and *Caddy version*, the mode
+switches to advanced when Caddy 2 has a Caddyfile, and the environment variables that Caddyfile uses are added empty. The switch turns
+itself off and the app restarts. Details and a mapping of the old options: [migration guide](https://github.com/seb5594/Home-Assistant-Caddy-Forge-App/blob/dev/docs/migrating-from-the-caddy-2-app.md).
+
 ### Importing from the Caddy 2 app
 
 In `advanced (caddyfile)` mode, a Caddyfile of the *Caddy 2* app is imported once if this app's config folder has none yet.
-For that the app reads the config folders of all apps read-only (`all_addon_configs`) and looks only at those named `*_caddy-2`.
+For that the app reads the config folders of all apps read-only (`all_addon_configs`, mounted at `/addon_configs`, or `/app_configs` on newer Home Assistant versions)
+and looks only at those of the Caddy 2 and CaddyBuilder apps.
 
 ### Environment variables
 

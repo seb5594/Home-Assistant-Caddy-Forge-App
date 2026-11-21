@@ -19,7 +19,7 @@ brauchst du kein Caddyfile-Wissen; wenn das nicht reicht, gibt es einen vollwert
   und als Wildcard), Login und Zugriffslisten als Formular statt als Caddyfile.
 - **Websites aus Git.** Ein Seitentyp, der ein Repository ausliefert und aktuell hält; kein Plugin nötig.
 - **Admin-Oberfläche.** Ein Schalter fügt eine Weboberfläche für Caddys Admin-API hinzu, nur aus privaten Netzen erreichbar.
-- **Caddyfile-Modus.** Beim ersten Mal aus deinem einfachen Setup erzeugt, danach ganz deins. Eine Caddyfile der Caddy-2-App wird automatisch importiert.
+- **Caddyfile-Modus.** Beim ersten Mal aus deinem einfachen Setup erzeugt, danach ganz deins. Ein Schalter übernimmt Plugins und Caddy-Version von CaddyBuilder sowie die Caddyfile von Caddy 2, aus zwei Apps wird eine.
 - **Sofort startklar.** Das gepinnte Caddy-Release steckt im Image; die Go-Toolchain arbeitet nur, wenn wirklich
   gebaut werden muss.
 - **Alle Architekturen:** amd64, aarch64, armv7, armhf und i386. Builds passen sich dem freien Speicher an und
@@ -63,7 +63,7 @@ Alle Optionen, das Update-Verhalten und die Fehlersuche stehen in der [App-Dokum
 (englisch). Dazu auf Deutsch:
 
 - [Praxisbeispiele](docs/examples.de.md): private Homepage, Website aus Git, PHP und Single-Page-Apps, Wildcard-Zertifikate
-- [Umzug von der Caddy-2-App](docs/migrating-from-the-caddy-2-app.de.md): automatischer Caddyfile-Import und Zuordnung ihrer Optionen
+- [Umzug von der Caddy-2- und CaddyBuilder-App](docs/migrating-from-the-caddy-2-app.de.md): ein Schalter übernimmt Plugins, Version und Caddyfile; Zuordnung der alten Optionen
 - [Umzug von nginx oder Apache](docs/migrating-from-nginx-and-apache.de.md): Direktiven-Tabellen und ein durchgespieltes Beispiel
 
 ## Ablauf beim Start
