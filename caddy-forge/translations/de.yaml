@@ -2,7 +2,7 @@ configuration:
   mode:
     name: Modus
     description: >-
-      „simple“ erzeugt die Caddyfile aus den Optionen unten. „caddyfile“ startet deine eigene Datei
+      „simple“ erzeugt die Caddyfile aus den Optionen unten. „advanced (caddyfile)“ startet deine eigene Datei
       (die Caddyfile im Konfigurationsordner der App), die beim ersten Mal aus den einfachen Optionen angelegt wird.
   log_level:
     name: Log-Level
@@ -18,9 +18,20 @@ configuration:
           Standardversion steckt in der App und startet sofort; alles andere und jedes Plugin löst einen Build aus.
       modules:
         name: Plugins
-        description: >-
-          Ein Go-Modul pro Eintrag, z. B. github.com/caddy-dns/cloudflare. Mit @version wird ein Plugin
-          gepinnt, ohne Version folgt es dem neuesten Release. Zeilen aus xcaddy (--with …) werden akzeptiert.
+        description: |-
+          Ein Eintrag pro Plugin: owner/repo (von github.com), ein Modulpfad wie gitlab.com/gruppe/projekt oder eine Repository-URL.
+          Ohne Version folgt ein Plugin dem neuesten Release; Zeilen aus xcaddy (--with …) werden akzeptiert.
+          Plugins finden: https://github.com/Sjord/caddy-modules
+        fields:
+          module:
+            name: Plugin
+            description: owner/repo, ein Go-Modulpfad oder eine Repository-URL, z. B. caddy-dns/cloudflare.
+          version:
+            name: Version
+            description: Optional ein Tag, Branch oder Commit statt des neuesten Releases, z. B. v0.2.1 oder main.
+          enabled:
+            name: Aktiv
+            description: Ausschalten, um den Eintrag zu behalten, das Plugin aber nicht mitzubauen. Ohne Angabe aktiv.
       updates:
         name: Update-Prüfung beim Start
         description: >-
@@ -33,17 +44,12 @@ configuration:
     name: Admin-Oberfläche
     description: >-
       Eine Weboberfläche für Caddys Admin-API (Konfiguration, Upstreams, Metriken). Beim Aktivieren wird das Plugin
-      mitgebaut und die Oberfläche nur für private Netze auf Port 8099 angeboten. Aktiviere diesen Port unter Netzwerk,
+      mitgebaut und die Oberfläche nur für private Netze auf Port 5594 angeboten. Aktiviere diesen Port unter Netzwerk,
       um den Button „Web-UI öffnen“ zu nutzen.
     fields:
       enabled:
         name: Admin-Oberfläche aktivieren
-        description: Fügt github.com/gsmlg-dev/caddy-admin-ui zum Build hinzu und liefert sie auf Port 8099 aus.
-      accent:
-        name: Akzentfarbe
-        description: >-
-          Eine Farbe wie #03a9f4 oder der Name eines Themes aus dem Themes-Ordner von Home Assistant, um dessen Primärfarbe zu
-          übernehmen. Leer lassen für Home-Assistant-Blau. Besucher können im Seitenfuß ihre eigene Farbe wählen.
+        description: Fügt github.com/gsmlg-dev/caddy-admin-ui zum Build hinzu und liefert sie auf Port 5594 aus.
       user:
         name: Benutzername
         description: Optionaler Login für die Admin-Oberfläche. Benötigt zusätzlich ein Passwort.
@@ -147,7 +153,7 @@ configuration:
     name: Caddyfile formatieren
     description: Räumt die Einrückung deiner eigenen Caddyfile bei jedem Start auf (nur im Modus „caddyfile“).
 network:
-  80/tcp: HTTP, wird auch zur Zertifikatsprüfung genutzt
+  80/tcp: HTTP (Standard 8080), wird auch zur Zertifikatsprüfung genutzt
   443/tcp: HTTPS
   443/udp: HTTP/3 (QUIC)
-  8099/tcp: Admin-Oberfläche (nur bei aktivierter Option)
+  5594/tcp: Admin-Oberfläche (nur bei aktivierter Option)

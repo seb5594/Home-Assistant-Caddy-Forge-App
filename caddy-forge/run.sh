@@ -76,14 +76,14 @@ prepare_caddyfile() {
       caddyfile_write "$GENERATED_CADDYFILE"
       CADDYFILE_BASE=$GENERATED_CADDYFILE
       ;;
-    caddyfile)
+    "advanced (caddyfile)" | caddyfile)
       caddyfile_seed_pro_mode "$USER_CADDYFILE"
       if option_is_true .format_caddyfile; then
         "$FORGE_BUNDLED_CADDY" fmt --overwrite "$USER_CADDYFILE" || log_warn "Could not format $USER_CADDYFILE"
       fi
       CADDYFILE_BASE=$USER_CADDYFILE
       ;;
-    *) fail "Unknown mode '$mode' (use 'simple' or 'caddyfile')." ;;
+    *) fail "Unknown mode '$mode' (use 'simple' or 'advanced (caddyfile)')." ;;
   esac
   CADDYFILE=$CADDYFILE_BASE
   if adminui_enabled; then
