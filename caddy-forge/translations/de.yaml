@@ -1,12 +1,12 @@
 configuration:
+  log_level:
+    name: Log-Level
+    description: Ausführlichkeit der App und, im einfachen Modus, von Caddy.
   mode:
     name: Modus
     description: >-
       „simple“ erzeugt die Caddyfile aus den Optionen unten. „advanced (caddyfile)“ startet deine eigene Datei
       (die Caddyfile im Konfigurationsordner der App), die beim ersten Mal aus den einfachen Optionen angelegt wird.
-  log_level:
-    name: Log-Level
-    description: Ausführlichkeit der App und, im einfachen Modus, von Caddy.
   caddy:
     name: Caddy-Build
     description: Welches Caddy läuft und welche Plugins hineinkompiliert werden.
@@ -137,8 +137,9 @@ configuration:
     name: Caddy-2- und CaddyBuilder-App übernehmen
     description: >-
       Einmal einschalten und die App starten: Sie liest den Build-Befehl der CaddyBuilder-App (Plugins, auskommentierte als
-      deaktivierte Einträge, Caddy-Version) und die Caddyfile der Caddy-2-App, trägt sie in diese Optionen ein, schaltet sich
-      wieder aus und startet neu. Vorhandene Einträge bleiben erhalten. Werte von Umgebungsvariablen sind nicht lesbar und müssen eingetragen werden.
+      deaktivierte Einträge, Caddy-Version) sowie Caddyfile und Optionen der Caddy-2-App (Log-Level, Umgebungsvariablen mit
+      Werten, Formatierung und ohne Caddyfile E-Mail und Seite), trägt sie in diese Optionen ein, schaltet sich wieder aus
+      und startet neu. Vorhandene Einträge bleiben erhalten.
   format_caddyfile:
     name: Caddyfile formatieren
     description: Räumt die Einrückung deiner eigenen Caddyfile bei jedem Start auf (nur im Modus „advanced (caddyfile)“).
