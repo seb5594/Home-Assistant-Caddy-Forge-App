@@ -13,6 +13,12 @@ test_adminui() {
   assert_contains "$output" "caddy_admin_ui" "admin UI: the plugin's handler serves the pages"
   assert_contains "$output" "reverse_proxy localhost:2019" "admin UI: everything else goes to the admin API"
   assert_contains "$output" 'respond @pty "Forbidden" 403' "admin UI: the web shell endpoint is blocked"
+  assert_contains "$output" "respond @badhost" "admin UI: public host names are refused (DNS rebinding)"
+  assert_contains "$output" "@samepage expression" "admin UI: requests of the page itself are recognised"
+  assert_contains "$output" 'src=\"/_forge/footer.js\"' "admin UI: pages are rewritten to load the footer script"
+  assert_contains "$output" "header Content-Type text/html*" "admin UI: only HTML pages are rewritten"
+  assert_contains "$output" "root * $ADMIN_UI_ASSETS" "admin UI: the footer files are served from the image"
+  assert_succeeds "admin UI: the footer files exist in the image" test -s "$ADMIN_UI_ASSETS/footer.js" -a -s "$ADMIN_UI_ASSETS/footer.css"
   assert_not_contains "$output" "basic_auth" "admin UI: no login unless one is configured"
 
   use_options '.admin_ui.enabled = true | .admin_ui.user = "root" | .admin_ui.password = "secret"'

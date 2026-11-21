@@ -37,9 +37,19 @@ test_real_build() {
   pid=$!
   wait_for_url http://localhost:8099/
   assert_equals "200" "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8099/)" "admin UI: the page is served"
+  assert_contains "$(curl -s http://localhost:8099/)" '<script src="/_forge/footer.js" defer></script></body>' "admin UI: the footer script is injected into the page"
+  assert_contains "$(curl -s http://localhost:8099/_forge/footer.js)" "Sebastian Schmidt" "admin UI: the footer script is served"
+  assert_contains "$(curl -s -H 'Accept-Encoding: gzip' http://localhost:8099/)" "</html>" "admin UI: pages stay readable for browsers that accept compression"
   assert_contains "$(curl -s http://localhost:8099/config/)" '"apps"' "admin UI: the admin API answers through it"
   assert_equals "403" "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8099/ws/pty)" "admin UI: the web shell stays closed"
   curl -s http://localhost:8099/config/ >"$TEST_TMP/current.json"
+  # What a browser sends when the page itself asks for the configuration.
+  assert_equals "200" "$(curl -s -o /dev/null -w '%{http_code}' -H 'Sec-Fetch-Mode: cors' -H 'Sec-Fetch-Site: same-origin' \
+    -H 'Referer: http://localhost:8099/' http://localhost:8099/config/)" "admin UI: the page's own requests are accepted"
+  assert_equals "403" "$(curl -s -o /dev/null -w '%{http_code}' -H 'Sec-Fetch-Mode: cors' -H 'Sec-Fetch-Site: cross-site' \
+    -H 'Referer: https://evil.example/page' http://localhost:8099/config/)" "admin UI: requests that come from another web page are refused"
+  assert_equals "403" "$(curl -s -o /dev/null -w '%{http_code}' -H 'Host: evil.example:8099' http://localhost:8099/config/)" \
+    "admin UI: a public host name (DNS rebinding) is refused"
   assert_equals "403" "$(curl -s -o /dev/null -w '%{http_code}' -X POST -H 'Origin: https://evil.example' \
     -H 'Content-Type: application/json' --data-binary "@$TEST_TMP/current.json" http://localhost:8099/load)" \
     "admin UI: requests from foreign origins are refused"
