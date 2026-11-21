@@ -12,20 +12,21 @@
 # (see the assets), which a response rewrite hooks into the HTML.
 #
 # Accent colour: Home Assistant keeps a user's theme in the browser's local storage, which a page on
-# another port cannot read. The script therefore offers a palette and picks a default in this order:
-# the visitor's own choice, `?accent=` in the address, the colour of the surrounding Home Assistant page
-# when embedded in it, the `accent` option (a colour or the name of a Home Assistant theme), Home
-# Assistant blue.
+# another port cannot read. The script therefore offers a palette (presets plus the primary colours of
+# the user's Home Assistant themes) and picks the colour in this order: the visitor's own choice,
+# `?accent=` in the address, the colour of the surrounding Home Assistant page when embedded in it,
+# the default below.
 # ==============================================================================
 
-ADMIN_UI_PORT=8099
+ADMIN_UI_PORT=5594
 ADMIN_API_ADDRESS='localhost:2019'
 : "${ADMIN_UI_ASSETS:=/usr/share/caddy-forge/admin-ui}"
 ADMIN_UI_ASSET_PATH='/_forge'
+ADMIN_UI_DEFAULT_ACCENT='#4fc3f7'
 : "${FORGE_HA_THEMES_DIR:=/homeassistant/themes}"
 ADMIN_UI_COLOR_PATTERN='^(#[0-9a-fA-F]{3,8}|rgba?\([0-9., %]+\))$'
 ADMIN_UI_PRESETS='[
-  {"name": "Home Assistant", "color": "#03a9f4"}, {"name": "Teal", "color": "#009688"},
+  {"name": "Light blue", "color": "#4fc3f7"}, {"name": "Home Assistant", "color": "#03a9f4"}, {"name": "Teal", "color": "#009688"},
   {"name": "Green", "color": "#4caf50"}, {"name": "Amber", "color": "#ffc107"},
   {"name": "Orange", "color": "#ff9800"}, {"name": "Red", "color": "#f44336"},
   {"name": "Pink", "color": "#e91e63"}, {"name": "Purple", "color": "#9c27b0"},
@@ -61,31 +62,13 @@ adminui_themes() {
   done
 }
 
-# The accent from the `accent` option: a colour as it is, or the colour of the named Home Assistant theme.
-adminui_default_accent() {
-  local accent name color
-  accent=$(option .admin_ui.accent)
-  [[ -n $accent ]] || return 0
-  if [[ $accent =~ $ADMIN_UI_COLOR_PATTERN ]]; then
-    printf '%s' "$accent"
-    return 0
-  fi
-  while IFS=$'\t' read -r name color; do
-    if [[ ${name,,} == "${accent,,}" ]]; then
-      printf '%s' "$color"
-      return 0
-    fi
-  done < <(adminui_themes)
-  log_warn "Admin UI accent '$accent' is neither a colour nor a theme found in $FORGE_HA_THEMES_DIR."
-}
-
 # Writes the palette the page script offers: presets, the user's themes and the default accent.
 adminui_write_palette() {
   local dir="$FORGE_DATA_DIR/admin-ui" themes
   mkdir -p "$dir"
   themes=$(adminui_themes | jq -Rn '[inputs | split("\t") | {name: .[0], color: .[1]}]')
-  jq -n --arg default "$(adminui_default_accent)" --argjson presets "$ADMIN_UI_PRESETS" --argjson themes "$themes" \
-    '{default: (if $default == "" then null else $default end), presets: $presets, themes: $themes}' >"$dir/palette.json"
+  jq -n --arg default "$ADMIN_UI_DEFAULT_ACCENT" --argjson presets "$ADMIN_UI_PRESETS" --argjson themes "$themes" \
+    '{default: $default, presets: $presets, themes: $themes}' >"$dir/palette.json"
 }
 
 # Prints the site block that serves the UI and forwards the rest to the admin API.
