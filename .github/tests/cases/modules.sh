@@ -22,6 +22,12 @@ test_modules() {
   assert_equals $'github.com/a/b\ngithub.com/caddy-dns/cloudflare' "$(modules_requested)" "modules: the DNS provider plugin is added automatically"
   use_options '.simple.dns_provider = "cloudflare" | .caddy.modules = ["github.com/caddy-dns/cloudflare@v0.2.1"]'
   assert_equals "github.com/caddy-dns/cloudflare@v0.2.1" "$(modules_requested)" "modules: a pinned DNS plugin is not added twice"
+  use_options '.admin_ui.enabled = true'
+  assert_equals "github.com/gsmlg-dev/caddy-admin-ui" "$(modules_requested)" "modules: the admin UI plugin is added when the switch is on"
+  use_options '.admin_ui.enabled = true | .caddy.modules = ["github.com/gsmlg-dev/caddy-admin-ui@main"]'
+  assert_equals "github.com/gsmlg-dev/caddy-admin-ui@main" "$(modules_requested)" "modules: a pinned admin UI plugin is respected"
+  use_options '.admin_ui.enabled = false'
+  assert_equals "" "$(modules_requested)" "modules: no admin UI plugin while the switch is off"
   use_options '.mode = "caddyfile" | .simple.dns_provider = "cloudflare"'
   assert_equals "" "$(modules_requested)" "modules: the DNS provider is ignored in Caddyfile mode"
 }

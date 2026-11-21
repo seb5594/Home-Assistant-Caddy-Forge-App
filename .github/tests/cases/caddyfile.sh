@@ -23,6 +23,9 @@ test_caddyfile() {
   assert_contains "$output" "root * /share/www" "caddyfile: static sites serve a folder"
   assert_contains "$output" "http://old.example.org {" "caddyfile: plain HTTP sites get the http:// prefix"
   assert_contains "$output" "redir https://new.example.org{uri} permanent" "caddyfile: redirects keep the path"
+  assert_contains "$output" "root * $FORGE_SITES_DIR/docs-example-org/public" "caddyfile: git sites serve their checkout"
+  assert_contains "$output" $'file_server {\n\t\thide .git' "caddyfile: the .git folder is never served"
+  assert_not_contains "$output" "user:token" "caddyfile: the repository URL with its token never reaches the file"
   assert_contains "$output" "encode zstd gzip" "caddyfile: compression is on by default"
   assert_contains "$output" "Strict-Transport-Security" "caddyfile: HSTS is sent for public certificates"
 
@@ -57,3 +60,20 @@ test_caddyfile() {
   caddyfile_seed_pro_mode "$FORGE_CONFIG_DIR/Caddyfile"
   assert_equals "# mine" "$(cat "$FORGE_CONFIG_DIR/Caddyfile")" "caddyfile: an existing Caddyfile is never overwritten"
 }
+
+# The recipes in docs/examples.md must stay valid.
+test_recipes() {
+  use_clean_folders
+  FORGE_SITES_DIR="$TEST_TMP/sites"
+  use_options '.simple.sites = [
+    {"domain": "blog.example.org", "type": "static", "target": "/share/blog",
+     "extra": ["php_fastcgi 192.168.1.20:9000 {", "root /var/www/html", "}"]},
+    {"domain": "app.example.org", "type": "static", "target": "/share/app", "extra": ["try_files {path} /index.html"]},
+    {"domain": "ha.example.org", "type": "proxy", "target": "homeassistant:8123", "extra": ["request_body {", "max_size 100MB", "}"]},
+    {"domain": "docs.example.org", "type": "git", "target": "https://example.org/site.git", "branch": "gh-pages", "folder": "public", "refresh": 15}
+  ]'
+  caddyfile_write "$FORGE_CONFIG_DIR/recipes.Caddyfile"
+  assert_succeeds "recipes: PHP-FPM, single-page apps and git sites are valid Caddyfile" \
+    "$FORGE_BUNDLED_CADDY" adapt --config "$FORGE_CONFIG_DIR/recipes.Caddyfile" --adapter caddyfile
+}
+
