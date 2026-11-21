@@ -14,7 +14,7 @@
 # ==============================================================================
 
 : "${FORGE_DATA_DIR:=/data/caddy}"
-: "${FORGE_BUNDLED_CADDY:=/usr/sbin/caddy}"
+: "${FORGE_BUNDLED_CADDY:=/usr/local/bin/caddy}"
 : "${FORGE_WORK_DIR:=/var/cache/caddy-forge}"
 : "${FORGE_MIN_FREE_MB:=2500}"  # module and build caches of one build reach about 2 GB
 
@@ -28,6 +28,7 @@ builder_init_paths
 # Inputs, filled by builder_load_request.
 WANTED_CADDY=latest
 MODULE_SPECS=()
+EXTRA_SPEC_COUNT=0 # specifications the shipped binary does not contain; with none, nothing needs building
 
 # Outputs of builder_plan and builder_select_binary.
 PLAN_ACTION=stock
@@ -61,6 +62,11 @@ builder_load_request() {
   if [[ -n $specs ]]; then
     mapfile -t MODULE_SPECS <<<"$specs"
   fi
+  EXTRA_SPEC_COUNT=0
+  local spec
+  for spec in "${MODULE_SPECS[@]}"; do
+    modules_is_bundled "$spec" || EXTRA_SPEC_COUNT=$((EXTRA_SPEC_COUNT + 1))
+  done
 }
 
 # Identifies a configuration: the same request on the same CPU gives the same fingerprint.
@@ -156,6 +162,7 @@ builder_collect_updates() {
   fi
   for spec in "${MODULE_SPECS[@]}"; do
     modules_is_floating "$spec" || continue
+    modules_is_bundled "$spec" && continue # follows the image, not the newest commit
     path=$(modules_path "$spec")
     built=$(builder_state_get ".modules[\"$path\"]")
     if latest=$(versions_latest_module "$path"); then
@@ -192,7 +199,7 @@ builder_plan() {
   [[ $WANTED_CADDY == latest ]] && floating_caddy=true
 
   # 1. The shipped binary is exactly what was asked for.
-  if ((${#MODULE_SPECS[@]} == 0)) && [[ $floating_caddy == false && $(versions_strip_v "$WANTED_CADDY") == "$bundled" ]]; then
+  if ((EXTRA_SPEC_COUNT == 0)) && [[ $floating_caddy == false && $(versions_strip_v "$WANTED_CADDY") == "$bundled" ]]; then
     plan_stock "Caddy $bundled is built into the app"
     PLAN_PRUNE=true
     return 0
@@ -203,7 +210,7 @@ builder_plan() {
     local built
     built=$(builder_state_get .caddy)
     built=$(versions_strip_v "$built")
-    if ((${#MODULE_SPECS[@]} == 0)) && ! versions_is_newer "$built" "$bundled"; then
+    if ((EXTRA_SPEC_COUNT == 0)) && ! versions_is_newer "$built" "$bundled"; then
       plan_stock "the built-in Caddy $bundled is as new as the custom build"
       PLAN_PRUNE=true
       return 0
@@ -219,7 +226,7 @@ builder_plan() {
   fi
 
   # 3. Plain Caddy that follows the newest release: the shipped binary may already be it.
-  if ((${#MODULE_SPECS[@]} == 0)) && [[ $floating_caddy == true ]]; then
+  if ((EXTRA_SPEC_COUNT == 0)) && [[ $floating_caddy == true ]]; then
     plan_stock "Caddy $bundled is built into the app"
     PLAN_PRUNE=true
     if [[ $policy != off ]]; then

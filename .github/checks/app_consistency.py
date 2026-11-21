@@ -53,8 +53,8 @@ def check_against_schema(options, schema, where=""):
 def check_pinned_caddy_version(config):
     """The version in the options is the one the image ships, so a plain setup never builds anything."""
     dockerfile = (APP / "Dockerfile").read_text()
-    shipped = re.search(r"^ARG CADDY_VERSION=(\d+\.\d+\.\d+)-r\d+$", dockerfile, re.M)
-    assert shipped, "Dockerfile must pin ARG CADDY_VERSION=<upstream version>-r<revision>"
+    shipped = re.search(r"^ARG CADDY_VERSION=(\d+\.\d+\.\d+)$", dockerfile, re.M)
+    assert shipped, "Dockerfile must pin ARG CADDY_VERSION=<upstream version>"
     default = str(config["options"]["caddy"]["version"])
     assert default == shipped.group(1), \
         f"config.yaml defaults to Caddy {default}, but the Dockerfile ships {shipped.group(1)}"
