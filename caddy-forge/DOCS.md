@@ -122,8 +122,9 @@ schedule. Nothing has to be built for it. Private repositories work with a token
 ### Admin UI
 
 The app shows a web front end for Caddy's admin API ([`caddy-admin-ui`](https://github.com/gsmlg-dev/caddy-admin-ui)) in Home Assistant's
-sidebar under **Caddy**. It is always on and needs no option: the plugin is part of the shipped binary and of every custom build.
-You can read the running configuration, upstreams and metrics. Changes made there last until the next start; the options remain the
+sidebar under **Caddy Forge**. It is always on and needs no option: the plugin is part of the shipped binary and of every custom build.
+It opens on the **Upstream** page; you can also read the running configuration and metrics. Every upstream card names the sites that
+use it, as links: a click opens the site, which shows right away whether the proxy entry is correct. Changes made there last until the next start; the options remain the
 source of truth.
 
 * Home Assistant logs the user in; the UI's port **5594** only answers the Supervisor's ingress gateway, nobody else on the network.
@@ -140,8 +141,9 @@ source of truth.
 
 Switch on **Take over the Caddy 2 and CaddyBuilder apps** once to merge two apps into this one: the plugins (commented-out lines as
 disabled entries) and Caddy version of CaddyBuilder's `xcaddyCommand.sh` are entered under *Plugins* and *Caddy version*, the mode
-switches to advanced when Caddy 2 has a Caddyfile, and the environment variables that Caddyfile uses are added empty. The switch turns
-itself off and the app restarts. Details and a mapping of the old options: [migration guide](https://github.com/seb5594/Home-Assistant-Caddy-Forge-App/blob/dev/docs/migrating-from-the-caddy-2-app.md).
+switches to advanced when Caddy 2 has a Caddyfile, and the options of Caddy 2 are read through the Supervisor: log level, environment
+variables with their values, the formatting switch and, when it ran without a Caddyfile, its email and site. The switch turns itself off and
+the app restarts. For reading the options the app has the role `manager`. Details and a mapping of the old options: [migration guide](https://github.com/seb5594/Home-Assistant-Caddy-Forge-App/blob/dev/docs/migrating-from-the-caddy-2-app.md).
 
 ### Importing from the Caddy 2 app
 

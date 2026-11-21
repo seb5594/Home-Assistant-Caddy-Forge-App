@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026.11.21.9
+
+- ✨ The admin UI opens on the **Upstream** page, and every upstream names the sites that use it as links, so a click shows whether the proxy entry is correct.
+- 🎨 Bigger, clearer navigation (also the menu on phones) with the current page marked; the footer sits at the bottom of the window. The UI is called **Caddy Forge Admin**, and the unused shell entry is hidden.
+- ✨ The takeover reads the options of the Caddy 2 app through the Supervisor: log level, environment variables with their values, the formatting switch and, when it ran without a Caddyfile, its email and site. This needs the role `manager`, used for that app only.
+- 🔧 The log level is the first option.
+
 ## 2026.11.21.8
 
 - ✨ The admin UI opens from Home Assistant's sidebar (ingress) and is always on; the option to switch it off is gone. Only the Supervisor can reach its port, Home Assistant does the login.
