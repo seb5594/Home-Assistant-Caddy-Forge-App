@@ -10,15 +10,16 @@ binary lives next to the server, so there is nothing to copy between apps.
    `https://homeassistant.local` with a certificate from Caddy's own authority.
 2. Replace the **Domain** with yours, pick **Certificate: auto** for a free public certificate
    and set an **Email address**.
-3. Forward ports **80** and **443** (TCP, and 443 UDP for HTTP/3) from your router to the Home Assistant host. The app
-   listens for HTTP on host port **8080** by default (change it under *Network*), so forward external port 80 to 8080.
+3. Forward ports **80** and **443** (TCP, and 443 UDP for HTTP/3) from your router to the Home Assistant host. The app runs on the host
+   network and listens for HTTP on port **8080** and for HTTPS on **443**, so forward external port 80 to **8080**.
 4. Tell Home Assistant to trust the proxy, in `configuration.yaml`:
 
    ```yaml
    http:
      use_x_forwarded_for: true
      trusted_proxies:
-       - 172.30.33.0/24
+       - 127.0.0.1
+       - ::1
    ```
 
 5. Start the app.
@@ -26,6 +27,18 @@ binary lives next to the server, so there is nothing to copy between apps.
 > **Local names and `tls: internal`**: browsers do not know Caddy's authority yet. The app copies its
 > root certificate to `caddy-root-ca.crt` in the app's config folder; install it on your devices to get
 > rid of the warning.
+
+## Network
+
+The app runs on the **host network**, like the Caddy 2 app did. There is no port mapping to configure; Caddy listens on the host
+itself: **8080** (HTTP, the router forwards port 80 to it), **443** (HTTPS and HTTP/3) and, with the admin UI on, **5594**.
+Consequences:
+
+* Home Assistant is `localhost:8123`; services on the same host are `localhost:<port>` as well. Names of other apps (`a0d7b954-nodered`)
+  are not guaranteed to resolve from the host network: use the address and port a service listens on.
+* Home Assistant sees the proxy as `127.0.0.1`, hence the `trusted_proxies` above.
+* Generated Caddyfiles set `http_port 8080` and switch the admin API off (the admin UI turns it on). In `advanced (caddyfile)` mode your file
+  decides: add `http_port 8080` to its global block if it should use 8080 as well.
 
 ## How the app starts
 
@@ -91,7 +104,7 @@ Each entry under **Sites**:
 | --- | --- |
 | **Domain** | The address visitors use. Separate several with commas. `*.example.com` needs a DNS provider. |
 | **Type** | `proxy` forwards to a service, `static` serves a folder, `redirect` sends visitors elsewhere, `git` serves a website from a git repository. |
-| **Target** | Proxy: `homeassistant:8123` or `https://192.168.1.5:8006`. Static: a folder such as `/share/www`, `/media` or `/homeassistant/www`. Redirect: the new address (the path is kept). Git: the repository URL. |
+| **Target** | Proxy: `localhost:8123` or `https://192.168.1.5:8006`. Static: a folder such as `/share/www`, `/media` or `/homeassistant/www`. Redirect: the new address (the path is kept). Git: the repository URL. |
 | **Git branch / sub folder / refresh** | Only for type `git`: the branch to serve (default branch if empty), a folder inside the repository such as `public`, and how often new commits are fetched in minutes (default 30, `0` = only on start). |
 | **Certificate** | `auto` (public, free), `internal` (Caddy's own authority), `custom` (`/ssl/fullchain.pem` and `/ssl/privkey.pem`), `off` (plain HTTP). |
 | **Skip upstream certificate check** | For HTTPS targets with a self-signed certificate. |
@@ -110,7 +123,7 @@ schedule. Nothing has to be built for it. Private repositories work with a token
 
 Switch on **Admin UI** to add the plugin [`caddy-admin-ui`](https://github.com/gsmlg-dev/caddy-admin-ui) to the build.
 It shows the running configuration, upstreams and metrics and is served on port **5594**, to private networks only, optionally
-behind a username and password. Enable port 5594 under *Network*, then *Open Web UI* on the app page works.
+behind a username and password. *Open Web UI* on the app page opens it.
 The accent colour of the UI is a light blue. Visitors can change it in the footer palette (presets, the primary colours of the themes in
 Home Assistant's `themes` folder and a free colour picker); the choice is kept in that browser. `?accent=%23e91e63` in the address
 works too, and so does the colour of the Home Assistant page around it when the UI is embedded in one. Home Assistant keeps a user's

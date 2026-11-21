@@ -8,10 +8,10 @@ Konfigurationseditor der App speichert). Du kannst beliebig viele anlegen; sie l
 ```yaml
 - domain: ha.example.org
   type: proxy
-  target: homeassistant:8123
+  target: localhost:8123
 ```
 
-E-Mail-Adresse im einfachen Modus setzen, Ports 80 (auf den Host-Port 8080 der App) und 443 weiterleiten und `trusted_proxies` in Home Assistant
+E-Mail-Adresse im einfachen Modus setzen, Ports 80 (auf 8080, wo die App lauscht) und 443 weiterleiten und `trusted_proxies` in Home Assistant
 ergänzen (siehe App-Dokumentation). Das Zertifikat wird automatisch angefordert und erneuert.
 
 ## 2. Eine private Homepage für dich oder die Familie
@@ -86,7 +86,7 @@ simple:
   sites:
     - domain: ha.example.org
       type: proxy
-      target: homeassistant:8123
+      target: localhost:8123
     - domain: nas.example.org
       type: proxy
       target: https://192.168.1.5:5001
@@ -118,7 +118,7 @@ Wer nicht aus den genannten Netzen kommt, bekommt nur „Forbidden“; im Netz w
 
 Aktiviere **Admin-Oberfläche** in der Konfiguration. Die App nimmt das Plugin
 [`caddy-admin-ui`](https://github.com/gsmlg-dev/caddy-admin-ui) in den nächsten Build auf und liefert es auf Port
-**5594** aus (Port unter *Netzwerk* aktivieren, dann auf der App-Seite *Web-UI öffnen* nutzen). Du siehst die laufende
+**5594** aus (dann auf der App-Seite *Web-UI öffnen* nutzen). Du siehst die laufende
 Konfiguration, Upstreams und Metriken; Änderungen dort leben nur im Speicher bis zum nächsten Start, die Optionen bleiben
 die maßgebliche Quelle.
 

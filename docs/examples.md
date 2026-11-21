@@ -8,10 +8,10 @@ configuration editor stores it). Add as many as you like; they run side by side.
 ```yaml
 - domain: ha.example.org
   type: proxy
-  target: homeassistant:8123
+  target: localhost:8123
 ```
 
-Set an email address under **Simple mode**, forward ports 80 (to the app's host port 8080) and 443 and add `trusted_proxies` to Home Assistant
+Set an email address under **Simple mode**, forward ports 80 (to 8080, where the app listens) and 443 and add `trusted_proxies` (`127.0.0.1`, `::1`) to Home Assistant
 (see the app documentation). The certificate is requested and renewed automatically.
 
 ## 2. A private homepage for yourself or the family
@@ -84,7 +84,7 @@ simple:
   sites:
     - domain: ha.example.org
       type: proxy
-      target: homeassistant:8123
+      target: localhost:8123
     - domain: nas.example.org
       type: proxy
       target: https://192.168.1.5:5001
@@ -115,7 +115,7 @@ Everybody outside the listed networks gets a plain "Forbidden"; inside, the logi
 
 Switch on **Admin UI** in the configuration. The app adds the plugin
 [`caddy-admin-ui`](https://github.com/gsmlg-dev/caddy-admin-ui) to the next build and serves it on port **5594**
-(enable the port under *Network*, then use *Open Web UI* on the app page). You can read the running configuration,
+(then use *Open Web UI* on the app page). You can read the running configuration,
 upstreams and metrics; changes made there live in memory until the next start, so keep the options as the source
 of truth.
 
