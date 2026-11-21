@@ -110,6 +110,13 @@ schedule. Nothing has to be built for it. Private repositories work with a token
 Switch on **Admin UI** to add the plugin [`caddy-admin-ui`](https://github.com/gsmlg-dev/caddy-admin-ui) to the build.
 It shows the running configuration, upstreams and metrics and is served on port **8099**, to private networks only, optionally
 behind a username and password. Enable port 8099 under *Network*, then *Open Web UI* on the app page works.
+The accent colour of the UI follows, in this order: the colour a visitor picked in the footer palette (kept in that browser),
+`?accent=%23e91e63` in the address, the colour of the Home Assistant page around it when it is embedded in one, the **Accent
+colour** option, Home Assistant blue. The option takes a colour (`#03a9f4`) or the name of a theme from Home Assistant's
+`themes` folder, whose primary colour is read again on every start; the footer palette lists those themes too. Home Assistant
+keeps a user's chosen theme in that user's browser, which a page on another port cannot read, so it cannot be picked up
+automatically.
+
 Open it by IP address or a local name (`homeassistant.local:8099`, `192.168.1.10:8099`); public host names are refused as a
 protection against DNS rebinding. The pages carry the developer footer of this app. Changes made in the UI last until the next
 start; the options remain the source of truth. In Caddyfile mode the UI expects the

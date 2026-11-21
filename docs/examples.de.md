@@ -122,7 +122,8 @@ Aktiviere **Admin-Oberfläche** in der Konfiguration. Die App nimmt das Plugin
 Konfiguration, Upstreams und Metriken; Änderungen dort leben nur im Speicher bis zum nächsten Start, die Optionen bleiben
 die maßgebliche Quelle.
 
-Öffne sie über die IP-Adresse oder einen lokalen Namen, z. B. `homeassistant.local:8099`. Zur Absicherung: Nur private Netze dürfen zugreifen, ein Login lässt sich ergänzen, Anfragen von fremden Webseiten werden
+Farben: Setze die **Akzentfarbe** auf eine Farbe oder den Namen eines deiner Home-Assistant-Themes; Besucher wählen im Seitenfuß
+ihre eigene aus der Palette. Öffne sie über die IP-Adresse oder einen lokalen Namen, z. B. `homeassistant.local:8099`. Zur Absicherung: Nur private Netze dürfen zugreifen, ein Login lässt sich ergänzen, Anfragen von fremden Webseiten werden
 abgewiesen, und die eingebaute Web-Shell des Plugins bleibt aus, ihr Endpunkt ist gesperrt. Die Oberfläche ist eine
 Single-Page-App mit absoluten Links, darum gibt es sie auf einem eigenen Port und nicht in der Seitenleiste von Home
 Assistant (Ingress).

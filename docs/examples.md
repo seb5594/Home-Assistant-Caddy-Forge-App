@@ -119,6 +119,7 @@ Switch on **Admin UI** in the configuration. The app adds the plugin
 upstreams and metrics; changes made there live in memory until the next start, so keep the options as the source
 of truth.
 
-Open it by IP address or local name, for example `homeassistant.local:8099`. Notes on how it is secured: only private networks may connect, you can add a login, requests from other web pages are
+Colours: set **Accent colour** to a colour or to the name of one of your Home Assistant themes, and visitors can pick their own
+from the palette in the page footer. Open it by IP address or local name, for example `homeassistant.local:8099`. Notes on how it is secured: only private networks may connect, you can add a login, requests from other web pages are
 refused, and the plugin's built-in web shell stays off with its endpoint blocked. The UI is a single-page app with absolute
 links, which is why it is offered on its own port and not inside Home Assistant's sidebar (ingress).
