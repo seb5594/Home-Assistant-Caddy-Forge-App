@@ -45,10 +45,8 @@ caddyfile_global_block() {
 
   printf '{\n'
   printf '\thttp_port %s\n' "$HTTP_PORT"
-  # On the host network the admin API would be open to everything on the host; only the admin UI needs it.
-  if ! adminui_enabled; then
-    printf '\tadmin off\n'
-  fi
+  # On the host network a TCP admin address would be open to everything on the host: use a private socket.
+  printf '\tadmin unix/%s\n' "$(adminui_socket)"
   [[ -n $email ]] && printf '\temail %s\n' "$email"
   case "$ca" in
     letsencrypt) printf '\tacme_ca %s\n' "$ACME_LETSENCRYPT" ;;

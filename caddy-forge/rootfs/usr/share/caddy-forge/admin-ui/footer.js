@@ -8,6 +8,8 @@
   var DEFAULT_ACCENT = '#4fc3f7';
   var STORAGE_KEY = 'forge-accent';
 
+  // The script's own address: the palette lies next to it, whatever path (ingress prefix) it is served below.
+  var SCRIPT = document.currentScript ? document.currentScript.src : '/_forge/footer.js';
   var palette = { default: null, presets: [], themes: [] };
   var chosen = readChoice();
 
@@ -166,7 +168,7 @@
 
   // ---- start -----------------------------------------------------------------------------------
   applyAccent();
-  fetch('/_forge/palette.json', { cache: 'no-store' })
+  fetch(new URL('palette.json', SCRIPT), { cache: 'no-store' })
     .then(function (reply) { return reply.json(); })
     .then(function (data) { palette = data; })
     .catch(function () { /* the built-in defaults stay */ })
