@@ -1,0 +1,94 @@
+name: Caddy Forge
+version: 2026.11.21.3
+slug: caddy-forge
+description: Caddy web server that builds itself with the plugins you name.
+url: https://github.com/seb5594/Home-Assistant-Caddy-Webserver-App
+stage: stable
+arch:
+  - aarch64
+  - amd64
+  - armv7
+  - armhf
+  - i386
+startup: services
+boot: auto
+init: true
+backup: hot
+webui: http://[HOST]:[PORT:8099]
+ports:
+  80/tcp: 80
+  443/tcp: 443
+  443/udp: 443
+  8099/tcp: null
+map:
+  - addon_config:rw
+  - ssl:ro
+  - share:ro
+  - media:ro
+  - homeassistant_config:ro
+options:
+  mode: simple
+  log_level: info
+  caddy:
+    version: 2.11.9
+    modules: []
+    updates: install
+    start_server: true
+  admin_ui:
+    enabled: false
+  simple:
+    acme_ca: auto
+    compression: true
+    security_headers: true
+    access_log: false
+    trusted_proxies: []
+    sites:
+      - domain: homeassistant.local
+        type: proxy
+        target: homeassistant:8123
+        tls: internal
+  env_vars: []
+  format_caddyfile: false
+schema:
+  mode: list(simple|caddyfile)
+  log_level: list(debug|info|warn|error)
+  caddy:
+    version: str
+    modules:
+      - str?
+    updates: list(install|notify|off)
+    start_server: bool
+  admin_ui:
+    enabled: bool
+    accent: str?
+    user: str?
+    password: password?
+  simple:
+    email: email?
+    acme_ca: list(auto|letsencrypt|zerossl|staging)
+    dns_provider: str?
+    dns_token: password?
+    trusted_proxies:
+      - str?
+    compression: bool
+    security_headers: bool
+    access_log: bool
+    sites:
+      - domain: str
+        type: list(proxy|static|redirect|git)
+        target: str
+        branch: str?
+        folder: str?
+        refresh: int(0,10080)?
+        tls: list(auto|internal|custom|off)?
+        skip_verify: bool?
+        auth_user: str?
+        auth_password: password?
+        allow_from:
+          - str?
+        extra:
+          - str?
+  env_vars:
+    - name: str
+      value: str
+  format_caddyfile: bool

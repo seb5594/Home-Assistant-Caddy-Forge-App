@@ -1,0 +1,76 @@
+{
+  "mode": "simple",
+  "log_level": "info",
+  "caddy": {
+    "version": "2.11.9",
+    "modules": [],
+    "updates": "install",
+    "start_server": true
+  },
+  "simple": {
+    "email": "admin@example.org",
+    "acme_ca": "staging",
+    "trusted_proxies": [
+      "10.0.0.0/8"
+    ],
+    "compression": true,
+    "security_headers": true,
+    "access_log": false,
+    "sites": [
+      {
+        "domain": "homeassistant.local",
+        "type": "proxy",
+        "target": "homeassistant:8123",
+        "tls": "internal"
+      },
+      {
+        "domain": "hass.example.org, www.hass.example.org",
+        "type": "proxy",
+        "target": "homeassistant:8123",
+        "allow_from": [
+          "192.168.0.0/16"
+        ],
+        "extra": [
+          "header X-Test 1"
+        ]
+      },
+      {
+        "domain": "nas.example.org",
+        "type": "proxy",
+        "target": "https://192.168.1.5:8006",
+        "skip_verify": true,
+        "auth_user": "admin",
+        "auth_password": "secret"
+      },
+      {
+        "domain": "files.example.org",
+        "type": "static",
+        "target": "/share/www",
+        "tls": "custom"
+      },
+      {
+        "domain": "old.example.org",
+        "type": "redirect",
+        "target": "https://new.example.org",
+        "tls": "off"
+      },
+      {
+        "domain": "Docs.Example.org",
+        "type": "git",
+        "target": "https://user:token@git.example.org/docs.git",
+        "branch": "gh-pages",
+        "folder": "public"
+      }
+    ]
+  },
+  "env_vars": [
+    {
+      "name": "DOMAIN",
+      "value": "example.org"
+    }
+  ],
+  "format_caddyfile": false,
+  "admin_ui": {
+    "enabled": false
+  }
+}

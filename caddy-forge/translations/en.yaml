@@ -1,0 +1,154 @@
+configuration:
+  mode:
+    name: Mode
+    description: >-
+      "simple" builds the Caddyfile from the options below. "caddyfile" runs your own file
+      (the Caddyfile in the app's config folder), which is created from the simple options on first use.
+  log_level:
+    name: Log level
+    description: Verbosity of the app and, in simple mode, of Caddy.
+  caddy:
+    name: Caddy build
+    description: Which Caddy to run and which plugins to compile into it.
+    fields:
+      version:
+        name: Caddy version
+        description: >-
+          Pinned upstream release such as 2.11.9, or "latest" to follow new releases. The pinned default
+          ships with the app and starts instantly; any other choice or any plugin triggers a build.
+      modules:
+        name: Plugins
+        description: >-
+          One Go module per entry, e.g. github.com/caddy-dns/cloudflare. Add @version to pin a plugin;
+          plugins without a version follow their newest release. Lines copied from xcaddy
+          (--with …) are accepted.
+      updates:
+        name: Update check on start
+        description: >-
+          "install" rebuilds when "latest" or an unpinned plugin has a newer release, "notify" only
+          writes it to the log, "off" skips the check and needs no internet.
+      start_server:
+        name: Start web server
+        description: Turn off to only check for updates and build the binary, then stop the app.
+  admin_ui:
+    name: Admin UI
+    description: >-
+      A web front end for Caddy's admin API (config, upstreams, metrics). Enabling it adds the plugin to the build
+      and serves the UI on port 8099 to private networks only. Enable that port under Network to use the
+      "Open Web UI" button.
+    fields:
+      enabled:
+        name: Enable admin UI
+        description: Adds github.com/gsmlg-dev/caddy-admin-ui to the build and serves it on port 8099.
+      accent:
+        name: Accent colour
+        description: >-
+          A colour such as #03a9f4, or the name of a theme from Home Assistant's themes folder to follow its primary colour.
+          Leave empty for Home Assistant blue. Visitors can pick their own colour in the page footer.
+      user:
+        name: Username
+        description: Optional login for the admin UI. Needs a password as well.
+      password:
+        name: Password
+        description: Plain text or a bcrypt hash; plain text is hashed on start.
+  simple:
+    name: Simple mode
+    description: Everything Caddy needs for typical setups, without writing a Caddyfile.
+    fields:
+      email:
+        name: Email address
+        description: Contact address for the certificate authority (expiry notices).
+      acme_ca:
+        name: Certificate authority
+        description: >-
+          "auto" keeps Caddy's default (Let's Encrypt, ZeroSSL as fallback). Use "staging" while testing
+          to avoid rate limits.
+      dns_provider:
+        name: DNS provider
+        description: >-
+          Validate certificates through DNS instead of port 80, which also enables wildcard domains.
+          Name of a provider module, e.g. cloudflare. Its plugin is added to the build automatically.
+      dns_token:
+        name: DNS API token
+        description: Access token of the DNS provider.
+      trusted_proxies:
+        name: Trusted proxies
+        description: Networks of proxies or tunnels in front of Caddy whose forwarded client addresses are believed.
+      compression:
+        name: Compression
+        description: Compress responses with zstd or gzip.
+      security_headers:
+        name: Security headers
+        description: >-
+          Add common protective headers and HSTS (HSTS only for publicly trusted certificates).
+      access_log:
+        name: Access log
+        description: Write one log line per request.
+      sites:
+        name: Sites
+        description: One entry per website or service.
+        fields:
+          domain:
+            name: Domain
+            description: >-
+              Address visitors use, e.g. hass.example.com. Several addresses can be separated by commas;
+              wildcards such as *.example.com need a DNS provider.
+          type:
+            name: Type
+            description: >-
+              "proxy" forwards to a service, "static" serves a folder, "redirect" sends visitors elsewhere,
+              "git" serves a website that lives in a git repository (kept up to date automatically).
+          target:
+            name: Target
+            description: >-
+              Proxy: where the service listens, e.g. homeassistant:8123 or https://192.168.1.5:8006.
+              Static: a folder such as /share/www or /media. Redirect: the address to send visitors to.
+              Git: the repository URL; private repositories work with a token in the URL.
+          branch:
+            name: Git branch
+            description: Branch to serve for type "git". Leave empty for the repository's default branch.
+          folder:
+            name: Git sub folder
+            description: Folder inside the repository to serve, e.g. public or docs. Leave empty for the root.
+          refresh:
+            name: Git refresh (minutes)
+            description: How often the repository is checked for new commits. 0 updates only when the app starts; the default is 30.
+          tls:
+            name: Certificate
+            description: >-
+              "auto" gets a free public certificate. "internal" uses Caddy's own authority for local names.
+              "custom" uses /ssl/fullchain.pem and /ssl/privkey.pem. "off" serves plain HTTP.
+          skip_verify:
+            name: Skip upstream certificate check
+            description: For HTTPS targets with a self-signed certificate.
+          auth_user:
+            name: Username
+            description: Protect the site with a login. Leave empty for none.
+          auth_password:
+            name: Password
+            description: Plain text or a bcrypt hash; plain text is hashed on start.
+          allow_from:
+            name: Allowed networks
+            description: >-
+              Only these networks may open the site, e.g. 192.168.0.0/16. Leave empty to allow everyone.
+          extra:
+            name: Extra directives
+            description: One Caddyfile line per entry added to this site, e.g. header X-Robots-Tag noindex.
+  env_vars:
+    name: Environment variables
+    description: Available to Caddy as {env.NAME}, for tokens used in your own Caddyfile.
+    fields:
+      name:
+        name: Name
+        description: Variable name, letters, digits and underscores.
+      value:
+        name: Value
+        description: Variable value. Secrets can reference Home Assistant's secrets.yaml with !secret.
+  format_caddyfile:
+    name: Format Caddyfile
+    description: Tidy up the indentation of your own Caddyfile on every start (mode "caddyfile" only).
+network:
+  80/tcp: HTTP, also used for certificate validation
+  443/tcp: HTTPS
+  443/udp: HTTP/3 (QUIC)
+  8099/tcp: Admin UI (only used when it is enabled)

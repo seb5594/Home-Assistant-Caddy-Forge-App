@@ -1,0 +1,27 @@
+#forge-footer { text-align: center; padding: 24px 16px 32px; font-size: 0.875rem; }
+#forge-footer .forge-credit { display: block; color: inherit; text-decoration: none; opacity: 0.85; }
+#forge-footer .forge-credit:hover { text-decoration: underline; opacity: 1; }
+#forge-footer .forge-heart { color: #ff4d5e; }
+#forge-footer .forge-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 12px; margin-top: 10px; }
+#forge-footer .forge-link {
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--color-primary, #03a9f4); text-decoration: none;
+  border: 1px solid currentColor; border-radius: 7px; padding: 6px 12px; opacity: 0.9;
+}
+#forge-footer .forge-link:hover { opacity: 1; }
+
+#forge-footer .forge-accent { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; margin-bottom: 18px; }
+#forge-footer .forge-accent-label { opacity: 0.7; margin-right: 4px; }
+#forge-footer .forge-swatch {
+  width: 22px; height: 22px; padding: 0; border-radius: 50%; cursor: pointer; position: relative;
+  border: 2px solid transparent; outline: 1px solid rgba(128, 128, 128, 0.5); outline-offset: 1px;
+}
+#forge-footer .forge-swatch:hover { transform: scale(1.15); }
+#forge-footer .forge-swatch.forge-active { border-color: var(--color-base-content, #fff); }
+#forge-footer .forge-custom { background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red); overflow: hidden; }
+#forge-footer .forge-custom input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+#forge-footer .forge-reset {
+  background: none; color: inherit; border: 1px solid rgba(128, 128, 128, 0.5);
+  border-radius: 7px; padding: 2px 10px; cursor: pointer; opacity: 0.8;
+}
+#forge-footer .forge-reset:hover { opacity: 1; }
