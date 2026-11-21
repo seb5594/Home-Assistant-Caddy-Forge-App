@@ -140,6 +140,9 @@ caddyfile_site_handler() {
     static)
       printf 'root * %s\nfile_server\n' "$target"
       ;;
+    git)
+      printf 'root * %s\nfile_server {\n\thide .git\n}\n' "$target"
+      ;;
     redirect)
       [[ $target == *'{'* ]] || target+='{uri}'
       printf 'redir %s permanent\n' "$target"
@@ -159,6 +162,9 @@ caddyfile_site() {
   password=$(option_item .simple.sites "$i" auth_password)
   [[ -n $domain ]] || fail "Site #$((i + 1)) has no domain."
   [[ -n $target ]] || fail "Site '$domain' has no target."
+  if [[ $type == git ]]; then
+    target=$(gitsite_root "$i")
+  fi
   allowed=$(option_item_lines .simple.sites "$i" allow_from | tr '\n' ' ')
 
   printf '%s {\n' "$(caddyfile_address "$domain" "$tls")"

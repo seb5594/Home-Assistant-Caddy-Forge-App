@@ -23,12 +23,19 @@ source "$FORGE_LIB_DIR/versions.sh"
 source "$FORGE_LIB_DIR/builder.sh"
 # shellcheck source=caddyfile.sh
 source "$FORGE_LIB_DIR/caddyfile.sh"
+# shellcheck source=adminui.sh
+source "$FORGE_LIB_DIR/adminui.sh"
+# shellcheck source=gitsites.sh
+source "$FORGE_LIB_DIR/gitsites.sh"
+# shellcheck source=migrate.sh
+source "$FORGE_LIB_DIR/migrate.sh"
 
 readonly REQUIRED_TOOLS=(curl jq go git xcaddy)
 readonly ENV_NAME_PATTERN='^[A-Za-z_][A-Za-z0-9_]*$'
 GENERATED_CADDYFILE="$FORGE_CONFIG_DIR/generated.Caddyfile"
 USER_CADDYFILE="$FORGE_CONFIG_DIR/Caddyfile"
 CADDYFILE=''
+CADDYFILE_BASE=''
 
 require_tools() {
   local tool
@@ -59,24 +66,30 @@ export_variables() {
   fi
 }
 
-# Sets CADDYFILE to the file Caddy will load.
+# Sets CADDYFILE to the file Caddy will load: the generated or your own Caddyfile, followed by
+# the admin UI when it is switched on.
 prepare_caddyfile() {
   local mode
   mode=$(option_or .mode simple)
   case "$mode" in
     simple)
       caddyfile_write "$GENERATED_CADDYFILE"
-      CADDYFILE=$GENERATED_CADDYFILE
+      CADDYFILE_BASE=$GENERATED_CADDYFILE
       ;;
     caddyfile)
       caddyfile_seed_pro_mode "$USER_CADDYFILE"
       if option_is_true .format_caddyfile; then
         "$FORGE_BUNDLED_CADDY" fmt --overwrite "$USER_CADDYFILE" || log_warn "Could not format $USER_CADDYFILE"
       fi
-      CADDYFILE=$USER_CADDYFILE
+      CADDYFILE_BASE=$USER_CADDYFILE
       ;;
     *) fail "Unknown mode '$mode' (use 'simple' or 'caddyfile')." ;;
   esac
+  CADDYFILE=$CADDYFILE_BASE
+  if adminui_enabled; then
+    adminui_check_admin_api "$CADDYFILE_BASE"
+    CADDYFILE=$(adminui_compose "$CADDYFILE_BASE")
+  fi
 }
 
 # Caddy creates its own certificate authority the first time a site uses `tls internal`.
@@ -95,11 +108,13 @@ export_root_certificate() {
 }
 
 uses_internal_certificates() {
-  grep -Eq '(^|[[:space:]])(tls[[:space:]]+internal|local_certs)' "$CADDYFILE"
+  grep -Eq '(^|[[:space:]])(tls[[:space:]]+internal|local_certs)' "$CADDYFILE_BASE"
 }
 
 start_server() {
   log_info "Starting Caddy $(builder_binary_version "$CADDY_BIN")"
+  gitsite_sync_all
+  gitsite_start_refresh
   if uses_internal_certificates; then
     export_root_certificate &
     disown
@@ -117,6 +132,7 @@ main() {
   builder_load_request
   prepare_caddyfile
   builder_select_binary "$CADDYFILE"
+  migrate_nginx
   if [[ $(option_or .caddy.start_server true) != true ]]; then
     log_info "Build-only run finished; the web server is not started because 'start_server' is off."
     return 0

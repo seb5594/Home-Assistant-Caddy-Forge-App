@@ -29,6 +29,22 @@ configuration:
       start_server:
         name: Webserver starten
         description: Ausschalten, um nur nach Updates zu suchen und die Binary zu bauen; danach stoppt die App.
+  admin_ui:
+    name: Admin-Oberfläche
+    description: >-
+      Eine Weboberfläche für Caddys Admin-API (Konfiguration, Upstreams, Metriken). Beim Aktivieren wird das Plugin
+      mitgebaut und die Oberfläche nur für private Netze auf Port 8099 angeboten. Aktiviere diesen Port unter Netzwerk,
+      um den Button „Web-UI öffnen“ zu nutzen.
+    fields:
+      enabled:
+        name: Admin-Oberfläche aktivieren
+        description: Fügt github.com/gsmlg-dev/caddy-admin-ui zum Build hinzu und liefert sie auf Port 8099 aus.
+      user:
+        name: Benutzername
+        description: Optionaler Login für die Admin-Oberfläche. Benötigt zusätzlich ein Passwort.
+      password:
+        name: Passwort
+        description: Klartext oder bcrypt-Hash; Klartext wird beim Start gehasht.
   simple:
     name: Einfacher Modus
     description: Alles, was Caddy für typische Setups braucht, ohne eine Caddyfile zu schreiben.
@@ -74,12 +90,23 @@ configuration:
           type:
             name: Typ
             description: >-
-              „proxy“ leitet an einen Dienst weiter, „static“ liefert einen Ordner aus, „redirect“ schickt Besucher woandershin.
+              „proxy“ leitet an einen Dienst weiter, „static“ liefert einen Ordner aus, „redirect“ schickt Besucher woandershin,
+              „git“ liefert eine Website aus einem Git-Repository aus (wird automatisch aktuell gehalten).
           target:
             name: Ziel
             description: >-
               Proxy: wo der Dienst lauscht, z. B. homeassistant:8123 oder https://192.168.1.5:8006.
               Static: ein Ordner wie /share/www oder /media. Redirect: die Adresse, zu der weitergeleitet wird.
+              Git: die Repository-URL; private Repositories funktionieren mit einem Token in der URL.
+          branch:
+            name: Git-Branch
+            description: Branch, der bei Typ „git“ ausgeliefert wird. Leer lassen für den Standard-Branch des Repositorys.
+          folder:
+            name: Git-Unterordner
+            description: Ordner im Repository, der ausgeliefert wird, z. B. public oder docs. Leer lassen für die Wurzel.
+          refresh:
+            name: Git-Aktualisierung (Minuten)
+            description: Wie oft nach neuen Commits gesucht wird. 0 aktualisiert nur beim Start der App; Standard ist 30.
           tls:
             name: Zertifikat
             description: >-
@@ -118,3 +145,4 @@ network:
   80/tcp: HTTP, wird auch zur Zertifikatsprüfung genutzt
   443/tcp: HTTPS
   443/udp: HTTP/3 (QUIC)
+  8099/tcp: Admin-Oberfläche (nur bei aktivierter Option)

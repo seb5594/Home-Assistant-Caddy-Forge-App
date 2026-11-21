@@ -30,6 +30,22 @@ configuration:
       start_server:
         name: Start web server
         description: Turn off to only check for updates and build the binary, then stop the app.
+  admin_ui:
+    name: Admin UI
+    description: >-
+      A web front end for Caddy's admin API (config, upstreams, metrics). Enabling it adds the plugin to the build
+      and serves the UI on port 8099 to private networks only. Enable that port under Network to use the
+      "Open Web UI" button.
+    fields:
+      enabled:
+        name: Enable admin UI
+        description: Adds github.com/gsmlg-dev/caddy-admin-ui to the build and serves it on port 8099.
+      user:
+        name: Username
+        description: Optional login for the admin UI. Needs a password as well.
+      password:
+        name: Password
+        description: Plain text or a bcrypt hash; plain text is hashed on start.
   simple:
     name: Simple mode
     description: Everything Caddy needs for typical setups, without writing a Caddyfile.
@@ -75,12 +91,23 @@ configuration:
           type:
             name: Type
             description: >-
-              "proxy" forwards to a service, "static" serves a folder, "redirect" sends visitors elsewhere.
+              "proxy" forwards to a service, "static" serves a folder, "redirect" sends visitors elsewhere,
+              "git" serves a website that lives in a git repository (kept up to date automatically).
           target:
             name: Target
             description: >-
               Proxy: where the service listens, e.g. homeassistant:8123 or https://192.168.1.5:8006.
               Static: a folder such as /share/www or /media. Redirect: the address to send visitors to.
+              Git: the repository URL; private repositories work with a token in the URL.
+          branch:
+            name: Git branch
+            description: Branch to serve for type "git". Leave empty for the repository's default branch.
+          folder:
+            name: Git sub folder
+            description: Folder inside the repository to serve, e.g. public or docs. Leave empty for the root.
+          refresh:
+            name: Git refresh (minutes)
+            description: How often the repository is checked for new commits. 0 updates only when the app starts; the default is 30.
           tls:
             name: Certificate
             description: >-
@@ -119,3 +146,4 @@ network:
   80/tcp: HTTP, also used for certificate validation
   443/tcp: HTTPS
   443/udp: HTTP/3 (QUIC)
+  8099/tcp: Admin UI (only used when it is enabled)

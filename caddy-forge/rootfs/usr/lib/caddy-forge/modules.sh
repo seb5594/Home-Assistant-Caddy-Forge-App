@@ -10,6 +10,7 @@ MODULE_PATTERN='^[A-Za-z0-9._~-]+(/[A-Za-z0-9._~-]+)+(@[A-Za-z0-9._+~/-]+)?(=[^[
 # DNS providers are published as github.com/caddy-dns/<provider>.
 DNS_PROVIDER_PATTERN='^[a-z0-9][a-z0-9_-]*$'
 DNS_MODULE_PREFIX='github.com/caddy-dns/'
+ADMIN_UI_MODULE='github.com/gsmlg-dev/caddy-admin-ui'
 
 # Normalizes raw module lines (stdin) into one specification per line (stdout).
 # People paste lines straight from xcaddy commands, so a leading `--with`, trailing
@@ -61,22 +62,38 @@ modules_dns_provider() {
   printf '%s' "$provider"
 }
 
-# Every plugin to build in: the user's list plus the module of the chosen DNS provider.
+# Appends <path> to the specifications (stdin to stdout) unless the user already listed that module,
+# with or without a version.
+modules_add_unless_present() {
+  local path=$1 specs found=false spec
+  specs=$(cat)
+  while IFS= read -r spec; do
+    if [[ -n $spec && $(modules_path "$spec") == "$path" ]]; then
+      found=true
+    fi
+  done <<<"$specs"
+  if [[ $found == false ]]; then
+    specs+=$'\n'"$path"
+  fi
+  printf '%s\n' "$specs" | awk 'NF'
+}
+
+# Every plugin to build in: the user's list plus what the chosen features need
+# (the DNS provider's module, the admin UI).
 modules_requested() {
-  local specs provider spec
+  local specs provider
   specs=$(option_lines .caddy.modules | modules_clean)
   provider=$(modules_dns_provider)
   if [[ -n $provider ]]; then
-    local found=false
-    while IFS= read -r spec; do
-      [[ -n $spec && $(modules_path "$spec") == "$DNS_MODULE_PREFIX$provider" ]] && found=true
-    done <<<"$specs"
-    if [[ $found == false ]]; then
-      specs+=$'\n'"$DNS_MODULE_PREFIX$provider"
-    fi
+    specs=$(printf '%s\n' "$specs" | modules_add_unless_present "$DNS_MODULE_PREFIX$provider")
+  fi
+  if option_is_true .admin_ui.enabled; then
+    specs=$(printf '%s\n' "$specs" | modules_add_unless_present "$ADMIN_UI_MODULE")
   fi
   specs=$(printf '%s\n' "$specs" | awk 'NF')
   printf '%s\n' "$specs" | modules_validate
-  [[ -n $specs ]] && printf '%s\n' "$specs"
+  if [[ -n $specs ]]; then
+    printf '%s\n' "$specs"
+  fi
   return 0
 }
