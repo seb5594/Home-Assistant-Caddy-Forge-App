@@ -1,5 +1,26 @@
 # Changelog
 
+## 2026.11.21.6
+
+- ✨ **Take over the Caddy 2 and CaddyBuilder apps:** one switch reads the build command of CaddyBuilder (Caddy version and `--with` plugins, commented-out ones as disabled entries) and the Caddyfile of Caddy 2, enters them into this app's options, switches itself off and restarts. Existing entries are kept.
+- 🔧 Works with both spellings of the config folder mount: `/addon_configs` (legacy map type, understood by every Home Assistant version) and `/app_configs`.
+- 🔒 The app now uses the Supervisor API (`hassio_api`) for its own options and its own restart.
+
+## 2026.11.21.5
+
+- ✨ The Caddyfile of the Caddy 2 app is imported automatically when the mode is `advanced (caddyfile)` and no Caddyfile exists yet, together with the small files next to it. `localhost:8123` becomes `homeassistant:8123`; missing environment variables, plugins of the old binary and other `localhost` addresses are named in the log.
+- 🔒 For this the config folders of all apps are mounted read-only (`all_addon_configs`); only folders named `*_caddy-2` are looked at.
+- 📚 Migration guide with a mapping of the Caddy 2 app's options.
+
+## 2026.11.21.4
+
+- ✨ Plugins are entries with a **plugin**, an optional **version** (tag, branch or commit) and an **enabled** switch. `owner/repo` is taken from github.com; module paths and repository URLs of other hosts work as well. The plugin hint links to a list of Caddy modules.
+- 🔧 The HTTP port defaults to host port 8080, the admin UI listens on port 5594 inside the container.
+- 🔧 The accent colour option is gone; the admin UI starts in a light blue and visitors pick their own in the footer.
+- 🔧 The mode `caddyfile` is called `advanced (caddyfile)` (the old value is still understood).
+- ⚠️ Plugin lists saved by an earlier version have to be entered again, because each plugin is now an entry instead of a text line.
+- 📄 The license file carries the copyright notice.
+
 ## 2026.11.21.3
 
 - ✨ The admin UI has an accent colour: a palette in the page footer (presets, the primary colours of your Home Assistant themes and a free colour picker) that is remembered per browser.

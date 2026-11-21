@@ -2,6 +2,33 @@
 # shellcheck shell=bash
 # Plugin list handling.
 
+test_module_entries() {
+  assert_equals "github.com/caddy-dns/cloudflare" "$(modules_expand caddy-dns/cloudflare)" "entries: owner/repo is taken from github.com"
+  assert_equals "github.com/caddy-dns/cloudflare@v0.2.1" "$(modules_expand caddy-dns/cloudflare@v0.2.1)" "entries: a version after the shorthand is kept"
+  assert_equals "github.com/a/b" "$(modules_expand github.com/a/b)" "entries: a full github.com module path stays as it is"
+  assert_equals "github.com/a/b" "$(modules_expand https://github.com/a/b)" "entries: a github.com URL is turned into a module path"
+  assert_equals "github.com/a/b" "$(modules_expand https://github.com/a/b.git)" "entries: a clone URL loses its .git"
+  assert_equals "github.com/a/b@main" "$(modules_expand https://github.com/a/b/tree/main)" "entries: a branch page becomes a version"
+  assert_equals "gitlab.com/group/project" "$(modules_expand https://gitlab.com/group/project)" "entries: other hosts are accepted"
+  assert_equals "go.example.org/team/plugin@v1.0.0" "$(modules_expand go.example.org/team/plugin@v1.0.0)" "entries: a module path on another host stays as it is"
+  assert_equals "github.com/a/b@v2=../b" "$(modules_with_version github.com/a/b=../b v2)" "entries: a version is added in front of a replacement"
+  assert_equals "github.com/a/b" "$(modules_with_version github.com/a/b '')" "entries: an empty version changes nothing"
+
+  use_options '.caddy.modules = [
+    {"module": "caddy-dns/cloudflare", "version": "v0.2.1"},
+    {"module": "https://gitlab.com/group/project", "version": "main"},
+    {"module": "mholt/caddy-l4", "enabled": false},
+    {"module": "hslatman/caddy-crowdsec-bouncer", "enabled": true},
+    {"module": "--with github.com/porech/caddy-maxmind-geolocation  # geo"}
+  ]'
+  assert_equals $'github.com/caddy-dns/cloudflare@v0.2.1\ngitlab.com/group/project@main\ngithub.com/hslatman/caddy-crowdsec-bouncer\ngithub.com/porech/caddy-maxmind-geolocation' \
+    "$(modules_requested)" "entries: shorthand, version field, disabled entries and pasted lines work together"
+  use_options '.caddy.modules = ["github.com/a/b"]'
+  assert_equals "github.com/a/b" "$(modules_requested)" "entries: plain strings from older options still work"
+  use_options '.caddy.modules = [{"module": "not a module"}]'
+  assert_fails "entries: an entry that is no module is reported" modules_requested
+}
+
 test_modules() {
   local cleaned
   cleaned=$(printf '%s\n' 'github.com/a/b' '  --with github.com/c/d@v1.2.3 \  # note' 'github.com/a/b' '# only a comment' '' | modules_clean)
@@ -18,16 +45,16 @@ test_modules() {
   assert_succeeds "modules: unpinned plugin counts as floating" modules_is_floating github.com/a/b
   assert_fails "modules: pinned plugin is not floating" modules_is_floating github.com/a/b@v1.2.3
 
-  use_options '.simple.dns_provider = "cloudflare" | .caddy.modules = ["github.com/a/b"]'
+  use_options '.simple.dns_provider = "cloudflare" | .caddy.modules = [{"module": "github.com/a/b"}]'
   assert_equals $'github.com/a/b\ngithub.com/caddy-dns/cloudflare' "$(modules_requested)" "modules: the DNS provider plugin is added automatically"
-  use_options '.simple.dns_provider = "cloudflare" | .caddy.modules = ["github.com/caddy-dns/cloudflare@v0.2.1"]'
+  use_options '.simple.dns_provider = "cloudflare" | .caddy.modules = [{"module": "github.com/caddy-dns/cloudflare@v0.2.1"}]'
   assert_equals "github.com/caddy-dns/cloudflare@v0.2.1" "$(modules_requested)" "modules: a pinned DNS plugin is not added twice"
   use_options '.admin_ui.enabled = true'
   assert_equals $'github.com/gsmlg-dev/caddy-admin-ui\ngithub.com/caddyserver/replace-response' "$(modules_requested)" "modules: the admin UI and its footer rewrite are added when the switch is on"
-  use_options '.admin_ui.enabled = true | .caddy.modules = ["github.com/gsmlg-dev/caddy-admin-ui@main"]'
+  use_options '.admin_ui.enabled = true | .caddy.modules = [{"module": "github.com/gsmlg-dev/caddy-admin-ui@main"}]'
   assert_equals $'github.com/gsmlg-dev/caddy-admin-ui@main\ngithub.com/caddyserver/replace-response' "$(modules_requested)" "modules: a pinned admin UI plugin is respected"
   use_options '.admin_ui.enabled = false'
   assert_equals "" "$(modules_requested)" "modules: no admin UI plugin while the switch is off"
-  use_options '.mode = "caddyfile" | .simple.dns_provider = "cloudflare"'
+  use_options '.mode = "advanced (caddyfile)" | .simple.dns_provider = "cloudflare"'
   assert_equals "" "$(modules_requested)" "modules: the DNS provider is ignored in Caddyfile mode"
 }

@@ -2,10 +2,10 @@
 // The UI is a single-page app that renders its own body, so everything is added once the page has
 // loaded and put back if the app drops it.
 (function () {
-  var REPOSITORY = 'https://github.com/seb5594/Home-Assistant-Caddy-Webserver-App';
+  var REPOSITORY = 'https://github.com/seb5594/Home-Assistant-Caddy-Forge-App';
   var APPS = 'https://github.com/seb5594/Home-Assistant-Apps';
   var SUPPORT = 'https://paypal.me/seb5594';
-  var HA_BLUE = '#03a9f4';
+  var DEFAULT_ACCENT = '#4fc3f7';
   var STORAGE_KEY = 'forge-accent';
 
   var palette = { default: null, presets: [], themes: [] };
@@ -39,7 +39,7 @@
   }
 
   function effectiveColor() {
-    return chosen || colorFromAddress() || colorOfParent() || palette.default || HA_BLUE;
+    return chosen || colorFromAddress() || colorOfParent() || palette.default || DEFAULT_ACCENT;
   }
 
   // Red, green and blue of any CSS colour, via a one-pixel canvas.
@@ -113,7 +113,7 @@
     var input = element('input');
     input.type = 'color';
     input.setAttribute('aria-label', 'Custom accent colour');
-    input.value = /^#[0-9a-f]{6}$/i.test(effectiveColor()) ? effectiveColor() : HA_BLUE;
+    input.value = /^#[0-9a-f]{6}$/i.test(effectiveColor()) ? effectiveColor() : DEFAULT_ACCENT;
     input.addEventListener('input', function () { saveChoice(input.value); applyAccent(); });
     label.appendChild(input);
     return label;
@@ -129,7 +129,7 @@
     row.appendChild(colorPicker());
     var reset = element('button', 'forge-reset', 'Auto');
     reset.type = 'button';
-    reset.title = 'Follow Home Assistant again';
+    reset.title = 'Back to the default';
     reset.addEventListener('click', function () { saveChoice(''); applyAccent(); });
     row.appendChild(reset);
     return row;

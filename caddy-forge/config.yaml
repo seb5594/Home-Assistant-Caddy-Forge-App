@@ -1,8 +1,8 @@
 name: Caddy Forge
-version: 2026.11.21.3
+version: 2026.11.21.6
 slug: caddy-forge
 description: Caddy web server that builds itself with the plugins you name.
-url: https://github.com/seb5594/Home-Assistant-Caddy-Webserver-App
+url: https://github.com/seb5594/Home-Assistant-Caddy-Forge-App
 stage: stable
 arch:
   - aarch64
@@ -14,18 +14,20 @@ startup: services
 boot: auto
 init: true
 backup: hot
-webui: http://[HOST]:[PORT:8099]
+hassio_api: true
+webui: http://[HOST]:[PORT:5594]
 ports:
-  80/tcp: 80
+  80/tcp: 8080
   443/tcp: 443
   443/udp: 443
-  8099/tcp: null
+  5594/tcp: null
 map:
   - addon_config:rw
   - ssl:ro
   - share:ro
   - media:ro
   - homeassistant_config:ro
+  - all_addon_configs:ro
 options:
   mode: simple
   log_level: info
@@ -49,18 +51,20 @@ options:
         tls: internal
   env_vars: []
   format_caddyfile: false
+  takeover: false
 schema:
-  mode: list(simple|caddyfile)
+  mode: list(simple|advanced (caddyfile))
   log_level: list(debug|info|warn|error)
   caddy:
     version: str
     modules:
-      - str?
+      - module: str
+        version: str?
+        enabled: bool?
     updates: list(install|notify|off)
     start_server: bool
   admin_ui:
     enabled: bool
-    accent: str?
     user: str?
     password: password?
   simple:
@@ -92,3 +96,4 @@ schema:
     - name: str
       value: str
   format_caddyfile: bool
+  takeover: bool

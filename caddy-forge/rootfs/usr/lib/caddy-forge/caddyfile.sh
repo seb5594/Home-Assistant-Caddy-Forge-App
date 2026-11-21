@@ -241,7 +241,7 @@ caddyfile_seed_pro_mode() {
   scratch=$(mktemp)
   {
     printf '# Seeded by Caddy Forge from your simple-mode options on %s.\n' "$(date '+%Y-%m-%d')"
-    printf '# This file is yours now: while the mode is "caddyfile", the simple options are ignored.\n'
+    printf '# This file is yours now: while the mode is "advanced (caddyfile)", the simple options are ignored.\n'
     printf '# Reference: https://caddyserver.com/docs/caddyfile\n\n'
     caddyfile_generate | tail -n +3
   } | caddyfile_format >"$scratch" || {

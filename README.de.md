@@ -19,7 +19,7 @@ brauchst du kein Caddyfile-Wissen; wenn das nicht reicht, gibt es einen vollwert
   und als Wildcard), Login und Zugriffslisten als Formular statt als Caddyfile.
 - **Websites aus Git.** Ein Seitentyp, der ein Repository ausliefert und aktuell hält; kein Plugin nötig.
 - **Admin-Oberfläche.** Ein Schalter fügt eine Weboberfläche für Caddys Admin-API hinzu, nur aus privaten Netzen erreichbar.
-- **Caddyfile-Modus.** Beim ersten Mal aus deinem einfachen Setup erzeugt, danach ganz deins.
+- **Caddyfile-Modus.** Beim ersten Mal aus deinem einfachen Setup erzeugt, danach ganz deins. Ein Schalter übernimmt Plugins und Caddy-Version von CaddyBuilder sowie die Caddyfile von Caddy 2, aus zwei Apps wird eine.
 - **Sofort startklar.** Das gepinnte Caddy-Release steckt im Image; die Go-Toolchain arbeitet nur, wenn wirklich
   gebaut werden muss.
 - **Alle Architekturen:** amd64, aarch64, armv7, armhf und i386. Builds passen sich dem freien Speicher an und
@@ -28,7 +28,7 @@ brauchst du kein Caddyfile-Wissen; wenn das nicht reicht, gibt es einen vollwert
 ## Loslegen
 
 1. Dieses Repository im Home-Assistant-App-Store hinzufügen, **Caddy Forge** installieren und die Konfiguration öffnen.
-2. Deine Domain in die Standard-Seite eintragen, den Zertifikatstyp wählen und die Ports 80 und 443 weiterleiten.
+2. Deine Domain in die Standard-Seite eintragen, den Zertifikatstyp wählen und die Ports 80 (die App lauscht auf Host-Port 8080) und 443 weiterleiten.
 3. In den `http:`-Einstellungen von Home Assistant `use_x_forwarded_for` und `trusted_proxies` ergänzen.
 4. App starten.
 
@@ -39,7 +39,10 @@ mode: simple
 caddy:
   version: 2.11.9
   modules:
-    - github.com/hslatman/caddy-crowdsec-bouncer
+    - module: hslatman/caddy-crowdsec-bouncer     # owner/repo wird auf github.com gesucht
+      version: main                               # optional Tag, Branch oder Commit
+    - module: mholt/caddy-l4
+      enabled: false                              # bleibt erhalten, wird aber nicht mitgebaut
   updates: install
 simple:
   email: du@example.org
@@ -60,6 +63,7 @@ Alle Optionen, das Update-Verhalten und die Fehlersuche stehen in der [App-Dokum
 (englisch). Dazu auf Deutsch:
 
 - [Praxisbeispiele](docs/examples.de.md): private Homepage, Website aus Git, PHP und Single-Page-Apps, Wildcard-Zertifikate
+- [Umzug von der Caddy-2- und CaddyBuilder-App](docs/migrating-from-the-caddy-2-app.de.md): ein Schalter übernimmt Plugins, Version und Caddyfile; Zuordnung der alten Optionen
 - [Umzug von nginx oder Apache](docs/migrating-from-nginx-and-apache.de.md): Direktiven-Tabellen und ein durchgespieltes Beispiel
 
 ## Ablauf beim Start

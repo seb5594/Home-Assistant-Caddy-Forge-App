@@ -29,6 +29,8 @@ source "$FORGE_LIB_DIR/adminui.sh"
 source "$FORGE_LIB_DIR/gitsites.sh"
 # shellcheck source=migrate.sh
 source "$FORGE_LIB_DIR/migrate.sh"
+# shellcheck source=takeover.sh
+source "$FORGE_LIB_DIR/takeover.sh"
 
 readonly REQUIRED_TOOLS=(curl jq go git xcaddy)
 readonly ENV_NAME_PATTERN='^[A-Za-z_][A-Za-z0-9_]*$'
@@ -74,16 +76,17 @@ prepare_caddyfile() {
   case "$mode" in
     simple)
       caddyfile_write "$GENERATED_CADDYFILE"
+      migrate_caddy2_hint "$USER_CADDYFILE"
       CADDYFILE_BASE=$GENERATED_CADDYFILE
       ;;
-    caddyfile)
-      caddyfile_seed_pro_mode "$USER_CADDYFILE"
+    "advanced (caddyfile)" | caddyfile)
+      migrate_caddy2_import "$USER_CADDYFILE" || caddyfile_seed_pro_mode "$USER_CADDYFILE"
       if option_is_true .format_caddyfile; then
         "$FORGE_BUNDLED_CADDY" fmt --overwrite "$USER_CADDYFILE" || log_warn "Could not format $USER_CADDYFILE"
       fi
       CADDYFILE_BASE=$USER_CADDYFILE
       ;;
-    *) fail "Unknown mode '$mode' (use 'simple' or 'caddyfile')." ;;
+    *) fail "Unknown mode '$mode' (use 'simple' or 'advanced (caddyfile)')." ;;
   esac
   CADDYFILE=$CADDYFILE_BASE
   if adminui_enabled; then
@@ -128,6 +131,10 @@ main() {
   log_info "Caddy Forge ${APP_VERSION:-dev} on $(uname -m), mode: $(option_or .mode simple)"
   require_tools
   prepare_directories
+  # The takeover stores new options and restarts the app; only if that did not happen it starts as usual.
+  if option_is_true .takeover && takeover_run; then
+    return 0
+  fi
   export_variables
   builder_load_request
   prepare_caddyfile

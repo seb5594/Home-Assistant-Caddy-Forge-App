@@ -65,6 +65,9 @@ def main():
     check_pinned_caddy_version(config)
     check_against_schema(config["options"], config["schema"])
     check_against_schema(json.loads(FIXTURE.read_text()), config["schema"])
+    # An entry of the plugin list with every field filled in.
+    check_against_schema({"module": "owner/repo", "version": "v1.2.3", "enabled": False},
+                         config["schema"]["caddy"]["modules"][0], "caddy.modules[].")
     print("App consistency checks passed.")
 
 
