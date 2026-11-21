@@ -44,8 +44,7 @@ configuration:
     name: Admin UI
     description: >-
       A web front end for Caddy's admin API (config, upstreams, metrics). Enabling it adds the plugin to the build
-      and serves the UI on port 5594 to private networks only. Enable that port under Network to use the
-      "Open Web UI" button.
+      and serves the UI on port 5594 to private networks only; "Open Web UI" opens it.
     fields:
       enabled:
         name: Enable admin UI
@@ -106,7 +105,7 @@ configuration:
           target:
             name: Target
             description: >-
-              Proxy: where the service listens, e.g. homeassistant:8123 or https://192.168.1.5:8006.
+              Proxy: where the service listens, e.g. localhost:8123 or https://192.168.1.5:8006.
               Static: a folder such as /share/www or /media. Redirect: the address to send visitors to.
               Git: the repository URL; private repositories work with a token in the URL.
           branch:
@@ -157,9 +156,4 @@ configuration:
       off again and restarts. Existing entries are kept. Values of environment variables are not available and must be entered.
   format_caddyfile:
     name: Format Caddyfile
-    description: Tidy up the indentation of your own Caddyfile on every start (mode "caddyfile" only).
-network:
-  80/tcp: HTTP (default 8080), also used for certificate validation
-  443/tcp: HTTPS
-  443/udp: HTTP/3 (QUIC)
-  5594/tcp: Admin UI (only used when it is enabled)
+    description: Tidy up the indentation of your own Caddyfile on every start (mode "advanced (caddyfile)" only).

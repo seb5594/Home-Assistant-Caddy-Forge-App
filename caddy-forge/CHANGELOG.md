@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026.11.21.7
+
+- 🔧 The app runs on the host network (like the Caddy 2 app), so there is nothing to map: Caddy listens on 8080 for HTTP, on 443 for HTTPS and on 5594 for the admin UI. The port section of the app is gone.
+- 🔧 Home Assistant is `localhost:8123` (also the default site). Home Assistant sees the proxy as `127.0.0.1`.
+- 🔒 Generated Caddyfiles switch the admin API off unless the admin UI is enabled, because on the host network it would be open to everything on the host.
+- 🔧 A Caddyfile imported from the Caddy 2 app no longer needs its `localhost` addresses rewritten.
+
 ## 2026.11.21.6
 
 - ✨ **Take over the Caddy 2 and CaddyBuilder apps:** one switch reads the build command of CaddyBuilder (Caddy version and `--with` plugins, commented-out ones as disabled entries) and the Caddyfile of Caddy 2, enters them into this app's options, switches itself off and restarts. Existing entries are kept.

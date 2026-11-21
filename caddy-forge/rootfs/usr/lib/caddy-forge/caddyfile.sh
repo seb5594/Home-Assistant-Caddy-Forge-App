@@ -16,6 +16,9 @@ ACME_LETSENCRYPT_STAGING='https://acme-staging-v02.api.letsencrypt.org/directory
 DEFAULT_CERTIFICATE='/ssl/fullchain.pem'
 DEFAULT_CERTIFICATE_KEY='/ssl/privkey.pem'
 DNS_TOKEN_VARIABLE='FORGE_DNS_TOKEN'
+# The app runs on the host network, where nothing maps ports for it: Caddy itself listens for HTTP on 8080
+# (the router forwards port 80 to it) and for HTTPS on the standard port 443.
+HTTP_PORT=8080
 # shellcheck disable=SC2016  # a regular expression, nothing to expand
 BCRYPT_PREFIX='^\$2[aby]\$'
 
@@ -41,6 +44,11 @@ caddyfile_global_block() {
   level=$(option_or .log_level info)
 
   printf '{\n'
+  printf '\thttp_port %s\n' "$HTTP_PORT"
+  # On the host network the admin API would be open to everything on the host; only the admin UI needs it.
+  if ! adminui_enabled; then
+    printf '\tadmin off\n'
+  fi
   [[ -n $email ]] && printf '\temail %s\n' "$email"
   case "$ca" in
     letsencrypt) printf '\tacme_ca %s\n' "$ACME_LETSENCRYPT" ;;

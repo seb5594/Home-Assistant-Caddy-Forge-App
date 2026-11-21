@@ -44,8 +44,7 @@ configuration:
     name: Admin-Oberfläche
     description: >-
       Eine Weboberfläche für Caddys Admin-API (Konfiguration, Upstreams, Metriken). Beim Aktivieren wird das Plugin
-      mitgebaut und die Oberfläche nur für private Netze auf Port 5594 angeboten. Aktiviere diesen Port unter Netzwerk,
-      um den Button „Web-UI öffnen“ zu nutzen.
+      mitgebaut und die Oberfläche nur für private Netze auf Port 5594 angeboten; „Web-UI öffnen“ ruft sie auf.
     fields:
       enabled:
         name: Admin-Oberfläche aktivieren
@@ -106,7 +105,7 @@ configuration:
           target:
             name: Ziel
             description: >-
-              Proxy: wo der Dienst lauscht, z. B. homeassistant:8123 oder https://192.168.1.5:8006.
+              Proxy: wo der Dienst lauscht, z. B. localhost:8123 oder https://192.168.1.5:8006.
               Static: ein Ordner wie /share/www oder /media. Redirect: die Adresse, zu der weitergeleitet wird.
               Git: die Repository-URL; private Repositories funktionieren mit einem Token in der URL.
           branch:
@@ -157,9 +156,4 @@ configuration:
       wieder aus und startet neu. Vorhandene Einträge bleiben erhalten. Werte von Umgebungsvariablen sind nicht lesbar und müssen eingetragen werden.
   format_caddyfile:
     name: Caddyfile formatieren
-    description: Räumt die Einrückung deiner eigenen Caddyfile bei jedem Start auf (nur im Modus „caddyfile“).
-network:
-  80/tcp: HTTP (Standard 8080), wird auch zur Zertifikatsprüfung genutzt
-  443/tcp: HTTPS
-  443/udp: HTTP/3 (QUIC)
-  5594/tcp: Admin-Oberfläche (nur bei aktivierter Option)
+    description: Räumt die Einrückung deiner eigenen Caddyfile bei jedem Start auf (nur im Modus „advanced (caddyfile)“).
