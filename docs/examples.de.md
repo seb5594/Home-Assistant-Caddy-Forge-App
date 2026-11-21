@@ -116,9 +116,9 @@ Wer nicht aus den genannten Netzen kommt, bekommt nur „Forbidden“; im Netz w
 
 ## 7. Caddy selbst ansehen: die Admin-Oberfläche
 
-Öffne **Caddy** in der Seitenleiste von Home Assistant. Es muss nichts aktiviert werden: Die Admin-Oberfläche
-([`caddy-admin-ui`](https://github.com/gsmlg-dev/caddy-admin-ui)) gehört zur App. Du siehst die laufende
-Konfiguration, Upstreams und Metriken; Änderungen dort leben nur im Speicher bis zum nächsten Start, die Optionen bleiben
+Öffne **Caddy Forge** in der Seitenleiste von Home Assistant. Es muss nichts aktiviert werden: Die Admin-Oberfläche
+([`caddy-admin-ui`](https://github.com/gsmlg-dev/caddy-admin-ui)) gehört zur App. Sie öffnet auf der Upstream-Seite, wo jeder Upstream die Seiten, die ihn nutzen, als Links nennt: ein Klick zeigt sofort, ob der Proxy-Eintrag stimmt. Außerdem siehst du die laufende
+Konfiguration und Metriken; Änderungen dort leben nur im Speicher bis zum nächsten Start, die Optionen bleiben
 die maßgebliche Quelle.
 
 Farben: Die Oberfläche folgt der Primärfarbe deines Home-Assistant-Themes; Besucher wählen im Seitenfuß ihre eigene Farbe aus der

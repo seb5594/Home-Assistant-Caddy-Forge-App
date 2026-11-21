@@ -25,7 +25,7 @@ test_real_build() {
 
   # Start the whole app with the binary just built and open the admin UI through ingress.
   start_app_with_admin_ui
-  assert_equals "200" "$(ingress_status /)" "build: the admin UI runs from the custom binary"
+  assert_equals "200" "$(ingress_status /upstream)" "build: the admin UI runs from the custom binary"
   assert_contains "$(ingress_get /config/)" '"apps"' "build: the admin API answers through the UI"
   stop_app
 

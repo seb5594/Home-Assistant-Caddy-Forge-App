@@ -1,8 +1,7 @@
 # Moving from the Caddy 2 and CaddyBuilder apps
 
 Many setups use two apps: *CaddyBuilder* compiles a Caddy with plugins and *Caddy 2* runs it. Caddy Forge does both and can take
-over what the two apps know: the plugins and Caddy version of the build command, and the Caddyfile. What can not be read from
-another app (its options) is mapped below.
+over what the two apps know: the plugins and Caddy version of the build command, the Caddyfile and the options of Caddy 2.
 
 ## One switch: take over
 
@@ -14,10 +13,11 @@ another app (its options) is mapped below.
      entries that are switched *off*, so nothing is lost and nothing unwanted is built;
    * the Caddyfile of Caddy 2, which switches the **mode** to `advanced (caddyfile)` (it is imported on the next start, see below);
      if there is no build command, the plugins of Caddy 2's own `caddy` binary are used instead;
-   * the **environment variable** names that Caddyfile uses; they are added with an empty value for you to fill in.
+   * the **options** of Caddy 2: log level, environment variables with their values, the formatting switch and, if it had no Caddyfile,
+     its email and site (table below). Environment variables that the Caddyfile uses and the old app did not define are added empty;
 4. The app stores the result in its own options, switches **take over** off again and restarts. Entries and settings you already made are kept;
    the Caddy version only changes while it still is the shipped default.
-5. Check the options, fill in the environment variable values, stop and uninstall the old apps.
+5. Check the options, stop and uninstall the old apps.
 
 Your own `xcaddyCommand.sh` looks like this and becomes the entries on the right:
 
@@ -28,7 +28,7 @@ Your own `xcaddyCommand.sh` looks like this and becomes the entries on the right
 | `#  --with github.com/mholt/caddy-l4@ef01c22 #@31ae08c` | `github.com/mholt/caddy-l4`, version `ef01c22`, **off** |
 | `# v2.9.1`, `# latest` | ignored (no `--with`) |
 
-The app needs the Supervisor API for this (`hassio_api`, only for its own options and its own restart).
+The app needs the Supervisor API for this (`hassio_api`): to store its own options, to restart itself and, with the role `manager`, to read the options of the old app.
 
 ### Old Home Assistant versions
 
@@ -53,24 +53,29 @@ exists understands and newer ones still accept (they call it `all_app_configs` a
 
 While the mode is still `simple`, the log only mentions once per start that an import is possible.
 
-## Without a Caddyfile
+## What happens to the options of the Caddy 2 app
 
-The Caddy 2 app keeps a Caddyfile out of the picture when only its options are filled in. Those options can not be read from here,
-so enter them once:
+The switch reads them through the Supervisor (see the end of this guide) and maps them like this:
 
 | Caddy 2 app | Caddy Forge |
 | --- | --- |
-| `non_caddyfile_config.email` | **Simple mode → Email address** |
-| `non_caddyfile_config.domain` | a site with this **Domain** |
-| `non_caddyfile_config.destination` and `port` | that site's **Target**, for Home Assistant `localhost:8123` |
-| `env_vars` | **Environment variables** |
-| `log_level` | **Log level** (`trace`/`debug` → debug, `info`/`notice` → info, `warning` → warn, `error`/`fatal` → error) |
+| `env_vars` | **Environment variables**, with their values. Variables you already entered keep their value; an empty one is filled. |
+| `log_level` | **Log level** (`trace`/`debug` → debug, `info`/`notice` → info, `warning` → warn, `error`/`fatal` → error), as long as yours still is `info` |
 | `caddy_fmt: true` | **Format Caddyfile** (advanced mode) |
-| `caddy_upgrade: true` and a custom binary | **Plugins** plus **Caddy version** `latest` and **Update check** `install` |
-| `args: ["--watch"]` | not needed; restart the app after changes |
+| `caddy_upgrade: true` | **Caddy version** `latest`, as long as it still is the shipped default |
+| `non_caddyfile_config.email` | **Simple mode → Email address** (only when the old app had no Caddyfile and ran from these options) |
+| `non_caddyfile_config.domain`, `destination` and `port` | a site with this **Domain** and the **Target** `destination:port` (same condition) |
+| `args: ["--watch"]` | not needed; restart the app after changes. Other arguments are named in the log. |
+
+The placeholders of the old app's defaults (`mydomain.com`, `your@email.com`) are not taken over. Values of environment variables
+end up in this app's options and are never written to the log. If the options can not be read (the old app is already
+uninstalled), the log says so and the rest of the takeover still works; enter those values once by hand.
 
 ## What the app is allowed to read
 
 To find the Caddyfile, the app mounts the config folders of all apps read-only (`all_addon_configs`). It only looks at folders named
 `*_caddy-2` or `*_caddy_2`, and only reads the Caddyfile, small files next to it and the list of plugins of the `caddy` binary
 (that binary is started once with `list-modules`). Nothing is written there.
+
+The role `manager` lets the app ask the Supervisor for the saved options of other apps; it is used once, for the takeover, and only for
+the Caddy 2 app (found by its name ending in `caddy-2`). Nothing is changed in the old apps.

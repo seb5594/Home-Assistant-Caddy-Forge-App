@@ -113,9 +113,9 @@ Everybody outside the listed networks gets a plain "Forbidden"; inside, the logi
 
 ## 7. Look at Caddy itself: the admin UI
 
-Open **Caddy** in Home Assistant's sidebar. There is nothing to switch on: the admin UI
-([`caddy-admin-ui`](https://github.com/gsmlg-dev/caddy-admin-ui)) is part of the app. You can read the running configuration,
-upstreams and metrics; changes made there live in memory until the next start, so keep the options as the source of truth.
+Open **Caddy Forge** in Home Assistant's sidebar. There is nothing to switch on: the admin UI
+([`caddy-admin-ui`](https://github.com/gsmlg-dev/caddy-admin-ui)) is part of the app. It opens on the upstream page, where every upstream names the sites that use it as links: click one to see at once whether the proxy entry is right. You can also read the running configuration
+and metrics; changes made there live in memory until the next start, so keep the options as the source of truth.
 
 Colours: the UI follows the primary colour of your Home Assistant theme; visitors can pick their own colour from the palette in
 the page footer. Notes on how it is secured: Home Assistant logs the user in, the UI's port only answers the Supervisor, requests

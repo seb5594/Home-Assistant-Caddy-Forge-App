@@ -1,12 +1,12 @@
 configuration:
+  log_level:
+    name: Log level
+    description: Verbosity of the app and, in simple mode, of Caddy.
   mode:
     name: Mode
     description: >-
       "simple" builds the Caddyfile from the options below. "advanced (caddyfile)" runs your own file
       (the Caddyfile in the app's config folder), which is created from the simple options on first use.
-  log_level:
-    name: Log level
-    description: Verbosity of the app and, in simple mode, of Caddy.
   caddy:
     name: Caddy build
     description: Which Caddy to run and which plugins to compile into it.
@@ -137,8 +137,9 @@ configuration:
     name: Take over the Caddy 2 and CaddyBuilder apps
     description: >-
       Switch on once and start the app: it reads the build command of the CaddyBuilder app (plugins, commented-out ones as
-      disabled entries, Caddy version) and the Caddyfile of the Caddy 2 app, enters them into these options, switches itself
-      off again and restarts. Existing entries are kept. Values of environment variables are not available and must be entered.
+      disabled entries, Caddy version) and the Caddyfile and options of the Caddy 2 app (log level, environment variables with
+      their values, formatting, and without a Caddyfile the email and the site), enters them into these options, switches itself
+      off again and restarts. Existing entries are kept.
   format_caddyfile:
     name: Format Caddyfile
     description: Tidy up the indentation of your own Caddyfile on every start (mode "advanced (caddyfile)" only).

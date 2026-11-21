@@ -57,14 +57,18 @@ stop_app() {
 # What a visitor of the admin UI can and cannot do through ingress; the app is already running.
 check_admin_ui_through_ingress() {
   local page
-  page=$(ingress_get /)
-  assert_equals "200" "$(ingress_status /)" "ingress: the admin UI is served"
+  assert_equals "302" "$(ingress_status /)" "ingress: the panel opens on the upstream page"
+  assert_equals "$TEST_INGRESS_PATH/upstream" "$(ingress_get / -D - -o /dev/null | tr -d '\r' | sed -n 's/^[Ll]ocation: //p')" "ingress: the way there leads through the ingress path"
+  page=$(ingress_get /upstream)
+  assert_equals "200" "$(ingress_status /upstream)" "ingress: the admin UI is served"
+  assert_contains "$page" "<title>Caddy Forge Admin</title>" "ingress: the UI carries the name of this app"
+  assert_not_contains "$page" "Caddy Admin" "ingress: the old name is gone"
   assert_contains "$page" "$TEST_INGRESS_PATH/_next/" "ingress: the page's assets are fetched below the ingress path"
   assert_not_contains "$page" "$TEST_INGRESS_PATH$TEST_INGRESS_PATH" "ingress: the path is never put in front twice"
   assert_contains "$page" "src=\"$TEST_INGRESS_PATH/_forge/footer.js\" defer></script></body>" "ingress: the footer script is injected"
   assert_contains "$(ingress_get /_forge/footer.js)" "Sebastian Schmidt" "ingress: the footer script is served"
   assert_equals "Light blue" "$(ingress_get /_forge/palette.json | jq -r '.presets[0].name')" "ingress: the colour palette is served"
-  assert_contains "$(ingress_get / -H 'Accept-Encoding: gzip')" "</html>" "ingress: pages stay readable for browsers that accept compression"
+  assert_contains "$(ingress_get /upstream -H 'Accept-Encoding: gzip')" "</html>" "ingress: pages stay readable for browsers that accept compression"
   assert_contains "$(ingress_get /config/)" '"apps"' "ingress: the admin API answers through the UI"
   assert_equals "403" "$(ingress_status /ws/pty)" "ingress: the web shell stays closed"
   assert_equals "200" "$(ingress_status /config/ -H 'Sec-Fetch-Mode: cors' -H 'Sec-Fetch-Site: same-origin' \
