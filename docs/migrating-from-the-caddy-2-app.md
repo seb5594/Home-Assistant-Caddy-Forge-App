@@ -38,7 +38,7 @@ exists understands and newer ones still accept (they call it `all_app_configs` a
 
 ## The short way, Caddyfile only
 
-1. Stop the Caddy 2 app. Both apps want ports 80 and 443.
+1. Stop the Caddy 2 app. Both apps share the host's ports, so only one of them can listen on 443 (and 80).
 2. Install Caddy Forge and set the mode to **advanced (caddyfile)**.
 3. Start it. If the app's config folder has no `Caddyfile` yet, the one of the Caddy 2 app is imported, together with the
    small files next to it (snippets, a `www` folder; up to 200 files of 5 MB each, the Caddy binary is left out).
@@ -47,8 +47,8 @@ exists understands and newer ones still accept (they call it `all_app_configs` a
      *Environment variables*; the values live in the old app's options and are not copied.
    * **Plugins** found in the custom `caddy` binary of the old app. Add each one under *Plugins* (`owner/repo` is enough); the app builds
      them on the next start.
-   * **Addresses that point at `localhost`**. The old app ran on the host network, so Home Assistant was `localhost:8123`.
-     That is rewritten to `homeassistant:8123` automatically; other services on `localhost` or `127.0.0.1` need their real address.
+   * **Addresses**. Like the old app, this one runs on the host network, so `localhost:8123` and other `localhost` addresses keep
+     working unchanged. HTTP is served on 8080 only if the Caddyfile sets `http_port 8080`; the old app's port 80 stays 80 otherwise.
 5. Check the sites, then uninstall the Caddy 2 app. A Caddyfile that already exists here is never replaced.
 
 While the mode is still `simple`, the log only mentions once per start that an import is possible.
@@ -62,7 +62,7 @@ so enter them once:
 | --- | --- |
 | `non_caddyfile_config.email` | **Simple mode → Email address** |
 | `non_caddyfile_config.domain` | a site with this **Domain** |
-| `non_caddyfile_config.destination` and `port` | that site's **Target**, for Home Assistant `homeassistant:8123` (not `localhost`) |
+| `non_caddyfile_config.destination` and `port` | that site's **Target**, for Home Assistant `localhost:8123` |
 | `env_vars` | **Environment variables** |
 | `log_level` | **Log level** (`trace`/`debug` → debug, `info`/`notice` → info, `warning` → warn, `error`/`fatal` → error) |
 | `caddy_fmt: true` | **Format Caddyfile** (advanced mode) |

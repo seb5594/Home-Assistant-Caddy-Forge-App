@@ -11,7 +11,7 @@ funktionieren einfach. Schreibe einen virtuellen Host nach dem anderen neu, stat
 2. **Ein Seiteneintrag pro Host.** Die meisten Hosts passen in die Liste **Seiten** der App (Domain, Typ, Ziel, Zertifikat,
    Login, erlaubte Netze). Besondere Zeilen kommen in die **Zusätzlichen Direktiven** der Seite, eine Caddyfile-Zeile pro Eintrag.
 3. **Mit der Staging-Zertifizierungsstelle testen** (`Zertifizierungsstelle: staging`), bis alles antwortet, danach auf `auto` stellen.
-4. **Umschalten.** Alten Server stoppen, die Router-Ports 80 (auf den Host-Port 8080 der App) und 443 auf Home Assistant richten und die App starten.
+4. **Umschalten.** Alten Server stoppen, die Router-Ports 80 (auf 8080, wo die App lauscht) und 443 auf Home Assistant richten und die App starten.
    Certbot-Cronjobs und Erneuerungs-Hooks löschen; das übernimmt Caddy.
 
 Braucht ein Host mehr, als das Formular bietet, stelle den Modus auf `advanced (caddyfile)` und schreibe die Caddyfile direkt: Die
@@ -76,7 +76,7 @@ wird zu einem Eintrag in der App,
 ```yaml
 - domain: ha.example.org
   type: proxy
-  target: homeassistant:8123
+  target: localhost:8123
   extra:
     - request_body {
     - max_size 100MB
@@ -90,7 +90,7 @@ ha.example.org {
 	request_body {
 		max_size 100MB
 	}
-	reverse_proxy homeassistant:8123
+	reverse_proxy localhost:8123
 }
 ```
 

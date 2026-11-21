@@ -5,7 +5,8 @@
 #   1. read the options and prepare the environment
 #   2. produce the Caddyfile (simple mode: generated from options, pro mode: yours)
 #   3. choose the binary: shipped, previously built or freshly built with plugins
-#   4. start Caddy, or stop after the build when so configured
+#   4. add the admin UI to the configuration in memory
+#   5. start Caddy, or stop after the build when so configured
 # ==============================================================================
 # shellcheck source-path=SCRIPTDIR/rootfs/usr/lib/caddy-forge
 set -Eeuo pipefail
@@ -38,6 +39,7 @@ GENERATED_CADDYFILE="$FORGE_CONFIG_DIR/generated.Caddyfile"
 USER_CADDYFILE="$FORGE_CONFIG_DIR/Caddyfile"
 CADDYFILE=''
 CADDYFILE_BASE=''
+RUN_CONFIG=''
 
 require_tools() {
   local tool
@@ -48,7 +50,7 @@ require_tools() {
 
 # Caddy keeps certificates and its state below /data, so they survive restarts and ride along in backups.
 prepare_directories() {
-  mkdir -p "$FORGE_DATA_DIR/data" "$FORGE_DATA_DIR/config" "$FORGE_CONFIG_DIR"
+  mkdir -p "$FORGE_DATA_DIR/data" "$FORGE_DATA_DIR/config" "$FORGE_CONFIG_DIR" "$FORGE_RUN_DIR"
   export XDG_DATA_HOME="$FORGE_DATA_DIR/data" XDG_CONFIG_HOME="$FORGE_DATA_DIR/config"
 }
 
@@ -68,8 +70,7 @@ export_variables() {
   fi
 }
 
-# Sets CADDYFILE to the file Caddy will load: the generated or your own Caddyfile, followed by
-# the admin UI when it is switched on.
+# Sets CADDYFILE to the file the configuration comes from: the generated or your own Caddyfile.
 prepare_caddyfile() {
   local mode
   mode=$(option_or .mode simple)
@@ -89,9 +90,18 @@ prepare_caddyfile() {
     *) fail "Unknown mode '$mode' (use 'simple' or 'advanced (caddyfile)')." ;;
   esac
   CADDYFILE=$CADDYFILE_BASE
-  if adminui_enabled; then
-    adminui_check_admin_api "$CADDYFILE_BASE"
-    CADDYFILE=$(adminui_compose "$CADDYFILE_BASE")
+}
+
+# Reads the Caddyfile into JSON, adds the admin UI and keeps the result in memory (the run folder) for
+# Caddy to load. The Caddyfile itself stays as it is. If anything fails, Caddy simply runs the Caddyfile.
+prepare_run_config() {
+  local base="$FORGE_RUN_DIR/config.json" final="$FORGE_RUN_DIR/run.json"
+  if "$CADDY_BIN" adapt --config "$CADDYFILE" --adapter caddyfile >"$base" 2>/dev/null && adminui_inject "$base" "$final"; then
+    chmod 600 "$base" "$final"
+    RUN_CONFIG=$final
+  else
+    log_warn "The admin UI could not be added to the configuration; Caddy runs without it."
+    RUN_CONFIG=''
   fi
 }
 
@@ -123,6 +133,9 @@ start_server() {
     disown
   fi
   cd "$FORGE_CONFIG_DIR"
+  if [[ -n $RUN_CONFIG ]]; then
+    exec "$CADDY_BIN" run --config "$RUN_CONFIG"
+  fi
   exec "$CADDY_BIN" run --config "$CADDYFILE" --adapter caddyfile
 }
 
@@ -139,6 +152,7 @@ main() {
   builder_load_request
   prepare_caddyfile
   builder_select_binary "$CADDYFILE"
+  prepare_run_config
   migrate_nginx
   if [[ $(option_or .caddy.start_server true) != true ]]; then
     log_info "Build-only run finished; the web server is not started because 'start_server' is off."

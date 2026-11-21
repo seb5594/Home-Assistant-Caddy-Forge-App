@@ -76,6 +76,12 @@ use_clean_folders() {
   FORGE_DATA_DIR=$(mktemp -d "$TEST_TMP/data.XXXXXX")
   FORGE_CONFIG_DIR=$(mktemp -d "$TEST_TMP/config.XXXXXX")
   FORGE_WORK_DIR="$TEST_TMP/work"
-  export FORGE_DATA_DIR FORGE_CONFIG_DIR FORGE_WORK_DIR
+  FORGE_RUN_DIR=$(mktemp -d "$TEST_TMP/run.XXXXXX")
+  export FORGE_DATA_DIR FORGE_CONFIG_DIR FORGE_WORK_DIR FORGE_RUN_DIR
   builder_init_paths
+}
+
+# The requested plugins without the two of the admin UI that every build contains.
+requested_without_bundled() {
+  modules_requested | grep -vxF -f <(modules_bundled_specs) || true
 }

@@ -38,7 +38,7 @@ Einführung versteht und den neuere weiter akzeptieren (dort heißt er `all_app_
 
 ## Der kurze Weg, nur die Caddyfile
 
-1. Die Caddy-2-App stoppen. Beide Apps wollen die Ports 80 und 443.
+1. Die Caddy-2-App stoppen. Beide Apps teilen sich die Ports des Hosts, nur eine kann auf 443 (und 80) lauschen.
 2. Caddy Forge installieren und den Modus auf **advanced (caddyfile)** stellen.
 3. Starten. Hat der Konfigurationsordner der App noch keine `Caddyfile`, wird die der Caddy-2-App importiert, zusammen mit den
    kleinen Dateien daneben (Snippets, ein `www`-Ordner; bis zu 200 Dateien mit je 5 MB, die Caddy-Binary bleibt außen vor).
@@ -47,8 +47,8 @@ Einführung versteht und den neuere weiter akzeptieren (dort heißt er `all_app_
      *Umgebungsvariablen* eintragen; die Werte stehen in den Optionen der alten App und werden nicht kopiert.
    * **Plugins** aus der eigenen `caddy`-Binary der alten App. Jedes unter *Plugins* eintragen (`owner/repo` genügt); die App baut sie
      beim nächsten Start.
-   * **Adressen auf `localhost`**. Die alte App lief im Host-Netzwerk, Home Assistant war dort `localhost:8123`. Das wird automatisch zu
-     `homeassistant:8123`; andere Dienste auf `localhost` oder `127.0.0.1` brauchen ihre echte Adresse.
+   * **Adressen**. Wie die alte App läuft diese im Host-Netzwerk, `localhost:8123` und andere `localhost`-Adressen funktionieren also
+     unverändert. HTTP wird nur auf 8080 bedient, wenn die Caddyfile `http_port 8080` setzt; sonst bleibt es wie in der alten App Port 80.
 5. Seiten prüfen, dann die Caddy-2-App deinstallieren. Eine bereits vorhandene Caddyfile wird nie ersetzt.
 
 Solange der Modus noch `simple` ist, weist das Log pro Start nur einmal darauf hin, dass ein Import möglich ist.
@@ -62,7 +62,7 @@ trage sie also einmal ein:
 | --- | --- |
 | `non_caddyfile_config.email` | **Einfacher Modus → E-Mail-Adresse** |
 | `non_caddyfile_config.domain` | eine Seite mit dieser **Domain** |
-| `non_caddyfile_config.destination` und `port` | das **Ziel** dieser Seite, für Home Assistant `homeassistant:8123` (nicht `localhost`) |
+| `non_caddyfile_config.destination` und `port` | das **Ziel** dieser Seite, für Home Assistant `localhost:8123` |
 | `env_vars` | **Umgebungsvariablen** |
 | `log_level` | **Log-Level** (`trace`/`debug` → debug, `info`/`notice` → info, `warning` → warn, `error`/`fatal` → error) |
 | `caddy_fmt: true` | **Caddyfile formatieren** (erweiterter Modus) |

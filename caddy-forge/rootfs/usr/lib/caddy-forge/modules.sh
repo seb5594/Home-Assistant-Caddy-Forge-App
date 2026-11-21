@@ -14,9 +14,11 @@ MODULE_PATTERN='^[A-Za-z0-9._~-]+(/[A-Za-z0-9._~-]+)+(@[A-Za-z0-9._+~/-]+)?(=[^[
 # DNS providers are published as github.com/caddy-dns/<provider>.
 DNS_PROVIDER_PATTERN='^[a-z0-9][a-z0-9_-]*$'
 DNS_MODULE_PREFIX='github.com/caddy-dns/'
+# The two plugins of the admin UI are part of every build: the UI itself and the response rewrite that
+# lets it live below Home Assistant's ingress path. The shipped binary contains them at the versions
+# the image pins (FORGE_ADMIN_UI_REF, FORGE_REPLACE_RESPONSE_REF); custom builds use the same ones.
 ADMIN_UI_MODULE='github.com/gsmlg-dev/caddy-admin-ui'
-# Rewrites the UI's pages on their way out, which is how the footer gets in.
-ADMIN_UI_REPLACE_MODULE='github.com/caddyserver/replace-response'
+REPLACE_RESPONSE_MODULE='github.com/caddyserver/replace-response'
 
 # Normalizes raw module lines (stdin) into one specification per line (stdout).
 # People paste lines straight from xcaddy commands, so a leading `--with`, trailing
@@ -109,18 +111,29 @@ modules_dns_provider() {
   printf '%s' "$provider"
 }
 
-# Appends <path> to the specifications (stdin to stdout) unless the user already listed that module,
-# with or without a version.
+# The specifications of the plugins the shipped binary already contains, one per line.
+modules_bundled_specs() {
+  printf '%s%s\n' "$ADMIN_UI_MODULE" "${FORGE_ADMIN_UI_REF:+@$FORGE_ADMIN_UI_REF}"
+  printf '%s%s\n' "$REPLACE_RESPONSE_MODULE" "${FORGE_REPLACE_RESPONSE_REF:+@$FORGE_REPLACE_RESPONSE_REF}"
+}
+
+# Succeeds when <spec> is exactly a plugin of the shipped binary (so it needs no build of its own).
+modules_is_bundled() {
+  modules_bundled_specs | grep -qxF -- "$1"
+}
+
+# Appends <spec> to the specifications (stdin to stdout) unless the user already listed that
+# module, with or without a version.
 modules_add_unless_present() {
-  local path=$1 specs found=false spec
+  local wanted=$1 specs found=false spec
   specs=$(cat)
   while IFS= read -r spec; do
-    if [[ -n $spec && $(modules_path "$spec") == "$path" ]]; then
+    if [[ -n $spec && $(modules_path "$spec") == "$(modules_path "$wanted")" ]]; then
       found=true
     fi
   done <<<"$specs"
   if [[ $found == false ]]; then
-    specs+=$'\n'"$path"
+    specs+=$'\n'"$wanted"
   fi
   printf '%s\n' "$specs" | awk 'NF'
 }
@@ -144,22 +157,19 @@ modules_from_options() {
     | select(.enabled != false) | [(.module // ""), (.version // "")] | join("\u001f")' "$OPTIONS_FILE")
 }
 
-# Every plugin to build in: the user's list plus what the chosen features need
-# (the DNS provider's module, the admin UI).
+# Every plugin to build in: the user's list, the module of the chosen DNS provider and the plugins
+# of the admin UI.
 modules_requested() {
-  local specs provider
+  local specs provider spec
   specs=$(modules_from_options | awk 'NF && !seen[$0]++')
   provider=$(modules_dns_provider)
   if [[ -n $provider ]]; then
     specs=$(printf '%s\n' "$specs" | modules_add_unless_present "$DNS_MODULE_PREFIX$provider")
   fi
-  if option_is_true .admin_ui.enabled; then
-    specs=$(printf '%s\n' "$specs" | modules_add_unless_present "$ADMIN_UI_MODULE" | modules_add_unless_present "$ADMIN_UI_REPLACE_MODULE")
-  fi
+  while IFS= read -r spec; do
+    specs=$(printf '%s\n' "$specs" | modules_add_unless_present "$spec")
+  done < <(modules_bundled_specs)
   specs=$(printf '%s\n' "$specs" | awk 'NF')
   modules_validate <<<"$specs"
-  if [[ -n $specs ]]; then
-    printf '%s\n' "$specs"
-  fi
-  return 0
+  printf '%s\n' "$specs"
 }

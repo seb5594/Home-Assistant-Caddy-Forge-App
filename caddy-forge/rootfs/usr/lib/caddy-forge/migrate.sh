@@ -119,21 +119,6 @@ migrate_copy_companions() {
   fi
 }
 
-# The Caddy 2 app runs on the host network, where Home Assistant is `localhost:8123`. Here it is
-# `homeassistant:8123`; other local addresses cannot be guessed, so they are only pointed out.
-migrate_adjust_upstreams() {
-  local file=$1 changed others
-  changed=$(grep -c -E '(localhost|127[.]0[.]0[.]1|\[::1\]):8123' "$file" || true)
-  if ((changed > 0)); then
-    sed -i -E 's/(localhost|127[.]0[.]0[.]1|\[::1\]):8123/homeassistant:8123/g' "$file"
-    log_info "Changed $changed address(es) from localhost:8123 to homeassistant:8123, because this app does not use the host network."
-  fi
-  others=$(grep -v '^[[:space:]]*#' "$file" | grep -c -E '(localhost|127[.]0[.]0[.]1|\[::1\]):[0-9]+' || true)
-  if ((others > 0)); then
-    log_warn "$others line(s) of the imported Caddyfile still point at localhost or 127.0.0.1. Inside this app that is the app itself: use the address or host name of the service instead."
-  fi
-}
-
 # Names of the environment variables a Caddyfile uses (`{$NAME}` or `{env.NAME}`), one per line.
 migrate_variable_names() {
   grep -o -E '[{](\$|env[.])[A-Za-z_][A-Za-z0-9_]*' "$1" | sed -E 's/^[{](\$|env[.])//' | sort -u || true
@@ -185,7 +170,6 @@ migrate_caddy2_import() {
   mv -f "$scratch" "$target"
   chmod 644 "$target"
   log_info "Imported the Caddyfile of the Caddy 2 app to $target."
-  migrate_adjust_upstreams "$target"
   migrate_copy_companions "$folder" "$(dirname "$target")"
   migrate_report_variables "$target"
   migrate_report_plugins "$folder"

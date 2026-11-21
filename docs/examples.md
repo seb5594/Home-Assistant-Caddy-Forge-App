@@ -8,10 +8,10 @@ configuration editor stores it). Add as many as you like; they run side by side.
 ```yaml
 - domain: ha.example.org
   type: proxy
-  target: homeassistant:8123
+  target: localhost:8123
 ```
 
-Set an email address under **Simple mode**, forward ports 80 (to the app's host port 8080) and 443 and add `trusted_proxies` to Home Assistant
+Set an email address under **Simple mode**, forward ports 80 (to 8080, where the app listens) and 443 and add `trusted_proxies` (`127.0.0.1`, `::1`) to Home Assistant
 (see the app documentation). The certificate is requested and renewed automatically.
 
 ## 2. A private homepage for yourself or the family
@@ -84,7 +84,7 @@ simple:
   sites:
     - domain: ha.example.org
       type: proxy
-      target: homeassistant:8123
+      target: localhost:8123
     - domain: nas.example.org
       type: proxy
       target: https://192.168.1.5:5001
@@ -113,12 +113,11 @@ Everybody outside the listed networks gets a plain "Forbidden"; inside, the logi
 
 ## 7. Look at Caddy itself: the admin UI
 
-Switch on **Admin UI** in the configuration. The app adds the plugin
-[`caddy-admin-ui`](https://github.com/gsmlg-dev/caddy-admin-ui) to the next build and serves it on port **5594**
-(enable the port under *Network*, then use *Open Web UI* on the app page). You can read the running configuration,
-upstreams and metrics; changes made there live in memory until the next start, so keep the options as the source
-of truth.
+Open **Caddy** in Home Assistant's sidebar. There is nothing to switch on: the admin UI
+([`caddy-admin-ui`](https://github.com/gsmlg-dev/caddy-admin-ui)) is part of the app. You can read the running configuration,
+upstreams and metrics; changes made there live in memory until the next start, so keep the options as the source of truth.
 
-Colours: the UI starts in a light blue; visitors pick their own colour from the palette in the page footer. Open it by IP address or local name, for example `homeassistant.local:5594`. Notes on how it is secured: only private networks may connect, you can add a login, requests from other web pages are
-refused, and the plugin's built-in web shell stays off with its endpoint blocked. The UI is a single-page app with absolute
-links, which is why it is offered on its own port and not inside Home Assistant's sidebar (ingress).
+Colours: the UI follows the primary colour of your Home Assistant theme; visitors can pick their own colour from the palette in
+the page footer. Notes on how it is secured: Home Assistant logs the user in, the UI's port only answers the Supervisor, requests
+from other web pages are refused, and the plugin's built-in web shell stays off with its endpoint blocked. Your own Caddyfile is
+not changed for it, not even if it says `admin off`.
