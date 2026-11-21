@@ -89,13 +89,32 @@ Each entry under **Sites**:
 | Field | Description |
 | --- | --- |
 | **Domain** | The address visitors use. Separate several with commas. `*.example.com` needs a DNS provider. |
-| **Type** | `proxy` forwards to a service, `static` serves a folder, `redirect` sends visitors elsewhere. |
-| **Target** | Proxy: `homeassistant:8123` or `https://192.168.1.5:8006`. Static: a folder such as `/share/www`, `/media` or `/homeassistant/www`. Redirect: the new address (the path is kept). |
+| **Type** | `proxy` forwards to a service, `static` serves a folder, `redirect` sends visitors elsewhere, `git` serves a website from a git repository. |
+| **Target** | Proxy: `homeassistant:8123` or `https://192.168.1.5:8006`. Static: a folder such as `/share/www`, `/media` or `/homeassistant/www`. Redirect: the new address (the path is kept). Git: the repository URL. |
+| **Git branch / sub folder / refresh** | Only for type `git`: the branch to serve (default branch if empty), a folder inside the repository such as `public`, and how often new commits are fetched in minutes (default 30, `0` = only on start). |
 | **Certificate** | `auto` (public, free), `internal` (Caddy's own authority), `custom` (`/ssl/fullchain.pem` and `/ssl/privkey.pem`), `off` (plain HTTP). |
 | **Skip upstream certificate check** | For HTTPS targets with a self-signed certificate. |
 | **Username / Password** | Protects the site with a login. A plain password is hashed on every start; a bcrypt hash is used as is. |
 | **Allowed networks** | Only these networks may open the site, for example `192.168.0.0/16`. |
 | **Extra directives** | One Caddyfile line per row, added to this site. |
+
+### Websites from git
+
+A site of type `git` keeps a shallow clone below `/data/sites`, updates it before Caddy starts and then on the chosen
+schedule. Nothing has to be built for it. Private repositories work with a token in the URL
+(`https://user:TOKEN@host/repo.git`, best taken from `secrets.yaml` with `!secret`); credentials never appear in the log and the
+`.git` folder is not served. If the repository cannot be reached, the last checkout keeps being served.
+
+### Admin UI
+
+Switch on **Admin UI** to add the plugin [`caddy-admin-ui`](https://github.com/gsmlg-dev/caddy-admin-ui) to the build.
+It shows the running configuration, upstreams and metrics and is served on port **8099**, to private networks only, optionally
+behind a username and password. Enable port 8099 under *Network*, then *Open Web UI* on the app page works.
+Changes made in the UI last until the next start; the options remain the source of truth. In Caddyfile mode the UI expects the
+admin endpoint at its default address `localhost:2019`.
+
+It is not part of Home Assistant's sidebar (ingress) because it is a single-page app with absolute links that cannot live below an
+ingress path. Its built-in web shell is never enabled and its endpoint is blocked.
 
 ### Environment variables
 
@@ -115,6 +134,12 @@ Simple mode picks them up on the next start:
 `caddyfile`: the app seeds `Caddyfile` from your options once and from then on only runs your file.
 Turn on **Format Caddyfile** to let Caddy tidy the indentation on every start.
 
+## Examples and migration
+
+* [Practical examples](https://github.com/seb5594/Home-Assistant-Caddy-Webserver-App/blob/dev/docs/examples.md): a private homepage, a site from git, PHP and single-page apps, wildcard certificates, LAN-only services.
+* [Moving from nginx or Apache](https://github.com/seb5594/Home-Assistant-Caddy-Webserver-App/blob/dev/docs/migrating-from-nginx-and-apache.md): directive tables, a worked example and an
+  adapter that reads a `nginx.conf` dropped into the `migrate` folder.
+
 ## Plugin ideas
 
 | Plugin | Module |
@@ -123,6 +148,9 @@ Turn on **Format Caddyfile** to let Caddy tidy the indentation on every start.
 | CrowdSec bouncer | `github.com/hslatman/caddy-crowdsec-bouncer` |
 | GeoIP filtering | `github.com/porech/caddy-maxmind-geolocation` |
 | Dynamic DNS | `github.com/mholt/caddy-dynamicdns` |
+| Rate limiting | `github.com/mholt/caddy-ratelimit` |
+| nginx config adapter | `github.com/caddyserver/nginx-adapter` |
+| Admin UI | `github.com/gsmlg-dev/caddy-admin-ui` (set via **Admin UI**) |
 | TCP/UDP routing (layer 4) | `github.com/mholt/caddy-l4` |
 
 Plugins bring their own settings; consult the plugin's documentation and place them in `global.caddy` or `sites.caddy`.
@@ -131,8 +159,9 @@ Plugins bring their own settings; consult the plugin's documentation and place t
 
 | Where | What |
 | --- | --- |
-| App config folder | `Caddyfile` (pro mode), `generated.Caddyfile`, `global.caddy`, `sites.caddy`, `caddy-root-ca.crt` |
+| App config folder | `Caddyfile` (pro mode), `generated.Caddyfile`, `global.caddy`, `sites.caddy`, `caddy-root-ca.crt`, `migrate/` |
 | `/data/caddy` (included in backups) | Certificates and Caddy's state, the custom binary and `state.json` |
+| `/data/sites` | Clones of the git sites |
 
 ## Troubleshooting
 

@@ -17,6 +17,8 @@ brauchst du kein Caddyfile-Wissen; wenn das nicht reicht, gibt es einen vollwert
   oder komplett offline bleiben.
 - **Einfacher Modus.** Reverse Proxy, statische Dateien, Weiterleitungen, kostenlose Zertifikate (auch per DNS
   und als Wildcard), Login und Zugriffslisten als Formular statt als Caddyfile.
+- **Websites aus Git.** Ein Seitentyp, der ein Repository ausliefert und aktuell hält; kein Plugin nötig.
+- **Admin-Oberfläche.** Ein Schalter fügt eine Weboberfläche für Caddys Admin-API hinzu, nur aus privaten Netzen erreichbar.
 - **Caddyfile-Modus.** Beim ersten Mal aus deinem einfachen Setup erzeugt, danach ganz deins.
 - **Sofort startklar.** Das gepinnte Caddy-Release steckt im Image; die Go-Toolchain arbeitet nur, wenn wirklich
   gebaut werden muss.
@@ -55,7 +57,10 @@ simple:
 ```
 
 Alle Optionen, das Update-Verhalten und die Fehlersuche stehen in der [App-Dokumentation](caddy-forge/DOCS.md)
-(englisch).
+(englisch). Dazu auf Deutsch:
+
+- [Praxisbeispiele](docs/examples.de.md): private Homepage, Website aus Git, PHP und Single-Page-Apps, Wildcard-Zertifikate
+- [Umzug von nginx oder Apache](docs/migrating-from-nginx-and-apache.de.md): Direktiven-Tabellen und ein durchgespieltes Beispiel
 
 ## Ablauf beim Start
 

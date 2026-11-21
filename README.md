@@ -7,7 +7,7 @@
 
 <p align="center">
   <a href="https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fseb5594%2FHome-Assistant-Apps"><img src="https://img.shields.io/static/v1?label=Home%20Assistant&amp;message=Add%20app%20repository&amp;color=18BCF2&amp;logo=homeassistant&amp;logoColor=white&amp;style=for-the-badge" alt="Home Assistant" height="28"></a><br>
-  <a href="https://github.com/seb5594/Home-Assistant-Caddy-Webserver-App/releases"><img src="https://img.shields.io/static/v1?label=app%20version&amp;message=2026.11.21&amp;color=1877A5&amp;style=for-the-badge" alt="app version" height="28"></a><br>
+  <a href="https://github.com/seb5594/Home-Assistant-Caddy-Webserver-App/releases"><img src="https://img.shields.io/static/v1?label=app%20version&amp;message=2026.11.21.1&amp;color=1877A5&amp;style=for-the-badge" alt="app version" height="28"></a><br>
   <img src="https://img.shields.io/static/v1?label=stage&amp;message=stable&amp;color=2F855A&amp;style=flat" alt="stage" height="20">
   <img src="https://img.shields.io/static/v1?label=arch&amp;message=amd64%20%C2%B7%20aarch64%20%C2%B7%20armv7%20%C2%B7%20armhf%20%C2%B7%20i386&amp;color=157F71&amp;style=flat" alt="arch" height="20">
   <a href="https://github.com/seb5594/home-assistant-base-multi-arch"><img src="https://img.shields.io/static/v1?label=base%20image&amp;message=3.24-2026.11.0&amp;color=1877A5&amp;style=flat" alt="base image" height="20"></a>
@@ -39,6 +39,8 @@ setups; a full Caddyfile mode is there when they are not enough.
   or stay offline.
 - **Simple mode.** Reverse proxy, static files, redirects, free certificates (also via DNS and wildcard),
   logins and allow lists, written as a form instead of a Caddyfile.
+- **Websites from git.** A site type that serves a repository and keeps it current; no plugin needed.
+- **Admin UI.** One switch adds a web front end for Caddy's admin API, reachable from private networks only.
 - **Caddyfile mode.** Seeded from your simple setup the first time, yours from then on.
 - **Starts instantly by default.** The pinned Caddy release ships in the image; the Go toolchain only
   works when a build is actually needed.
@@ -77,6 +79,10 @@ simple:
 ```
 
 The full option reference, update behavior and troubleshooting are in the [app documentation](caddy-forge/DOCS.md).
+More to read:
+
+- [Practical examples](docs/examples.md): private homepage, website from git, PHP and single-page apps, wildcard certificates
+- [Moving from nginx or Apache](docs/migrating-from-nginx-and-apache.md): directive tables and a worked example
 
 ## How it works
 
@@ -103,7 +109,8 @@ flowchart LR
 | --- | --- |
 | `caddy-forge/config.yaml`, `translations/` | App metadata, options and their English and German texts |
 | `caddy-forge/run.sh` | Start sequence: options, Caddyfile, binary selection, server |
-| `caddy-forge/rootfs/usr/lib/caddy-forge/` | One library per concern: `options`, `modules`, `versions`, `builder`, `caddyfile`, `log` |
+| `caddy-forge/rootfs/usr/lib/caddy-forge/` | One library per concern: `options`, `modules`, `versions`, `builder`, `caddyfile`, `gitsites`, `adminui`, `migrate`, `log` |
+| `docs/` | Examples and migration guides in English and German |
 | `.github/tests/` | Runtime tests that run inside the built image, including a real plugin build |
 | `.github/checks/` | Project rules: pinned version in sync, defaults match the schema |
 | `branding/` | SVG sources of icon and logo |
