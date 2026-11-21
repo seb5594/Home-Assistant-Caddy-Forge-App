@@ -8,6 +8,42 @@
   var DEFAULT_ACCENT = '#4fc3f7';
   var STORAGE_KEY = 'forge-accent';
 
+  // ---- language ----------------------------------------------------------------------------------
+  // The page follows the language of the browser (German or English). Names that come from the plugin
+  // itself are translated by UI_WORDS once the page has rendered.
+  var LANGUAGE = ((navigator.languages && navigator.languages[0]) || navigator.language || 'en').slice(0, 2).toLowerCase();
+  var STRINGS = {
+    en: {
+      accent: 'Accent', auto: 'Auto', autoTitle: 'Back to the default', custom: 'Custom colour', preset: 'Preset', theme: 'Home Assistant theme',
+      creditBefore: 'Application developed by seb5594 (Sebastian Schmidt) - Made with ', creditAfter: ' in Germany',
+      more: 'More Home Assistant Apps', support: 'Support my work ☕', site: 'Site', siteTitle: 'Open the site'
+    },
+    de: {
+      accent: 'Akzent', auto: 'Auto', autoTitle: 'Zurück zum Standard', custom: 'Eigene Farbe', preset: 'Vorgabe', theme: 'Home-Assistant-Theme',
+      creditBefore: 'Anwendung entwickelt von seb5594 (Sebastian Schmidt) – Mit ', creditAfter: ' in Deutschland gemacht',
+      more: 'Weitere Home-Assistant-Apps', support: 'Unterstütze meine Arbeit ☕', site: 'Seite', siteTitle: 'Seite öffnen'
+    }
+  };
+  var COLOR_NAMES = {
+    de: { 'Light blue': 'Hellblau', 'Teal': 'Türkis', 'Green': 'Grün', 'Amber': 'Bernstein', 'Red': 'Rot', 'Pink': 'Rosa', 'Purple': 'Violett' }
+  };
+  // Words of the plugin's own pages, exact matches of an element's text.
+  var UI_WORDS = {
+    de: {
+      'Config': 'Konfiguration', 'Setup': 'Einrichtung', 'Metrics': 'Metriken', 'Upstream': 'Upstreams', 'Requests': 'Anfragen',
+      'Convert Caddyfile to JSON': 'Caddyfile in JSON umwandeln', 'Put your Caddyfile here': 'Caddyfile hier einfügen',
+      'Convert': 'Umwandeln', 'JSON config': 'JSON-Konfiguration', 'Save config to caddy server': 'Konfiguration an Caddy senden'
+    }
+  };
+
+  function t(key) {
+    return (STRINGS[LANGUAGE] || STRINGS.en)[key] || STRINGS.en[key];
+  }
+
+  function colorName(name) {
+    return (COLOR_NAMES[LANGUAGE] || {})[name] || name;
+  }
+
   // The script's own address: the palette lies next to it, whatever path (ingress prefix) it is served below.
   var SCRIPT = document.currentScript ? document.currentScript.src : '/_forge/footer.js';
   var palette = { default: null, presets: [], themes: [] };
@@ -101,8 +137,9 @@
   function swatch(entry, group) {
     var button = element('button', 'forge-swatch');
     button.type = 'button';
-    button.title = entry.name;
-    button.setAttribute('aria-label', group + ': ' + entry.name);
+    var label = group === 'preset' ? colorName(entry.name) : entry.name;
+    button.title = label;
+    button.setAttribute('aria-label', t(group) + ': ' + label);
     button.setAttribute('data-color', entry.color);
     button.style.backgroundColor = entry.color;
     button.addEventListener('click', function () { saveChoice(entry.color); applyAccent(); });
@@ -111,10 +148,10 @@
 
   function colorPicker() {
     var label = element('label', 'forge-swatch forge-custom');
-    label.title = 'Custom colour';
+    label.title = t('custom');
     var input = element('input');
     input.type = 'color';
-    input.setAttribute('aria-label', 'Custom accent colour');
+    input.setAttribute('aria-label', t('custom'));
     input.value = /^#[0-9a-f]{6}$/i.test(effectiveColor()) ? effectiveColor() : DEFAULT_ACCENT;
     input.addEventListener('input', function () { saveChoice(input.value); applyAccent(); });
     label.appendChild(input);
@@ -123,15 +160,15 @@
 
   function accentRow() {
     var row = element('div', 'forge-accent');
-    row.appendChild(element('span', 'forge-accent-label', 'Accent'));
+    row.appendChild(element('span', 'forge-accent-label', t('accent')));
     var entries = palette.presets.concat(palette.themes);
     for (var i = 0; i < entries.length; i++) {
-      row.appendChild(swatch(entries[i], i < palette.presets.length ? 'Preset' : 'Home Assistant theme'));
+      row.appendChild(swatch(entries[i], i < palette.presets.length ? 'preset' : 'theme'));
     }
     row.appendChild(colorPicker());
-    var reset = element('button', 'forge-reset', 'Auto');
+    var reset = element('button', 'forge-reset', t('auto'));
     reset.type = 'button';
-    reset.title = 'Back to the default';
+    reset.title = t('autoTitle');
     reset.addEventListener('click', function () { saveChoice(''); applyAccent(); });
     row.appendChild(reset);
     return row;
@@ -142,14 +179,14 @@
     footer.id = 'forge-footer';
     footer.appendChild(accentRow());
 
-    var credit = link('forge-credit', REPOSITORY, 'Application developed by seb5594 (Sebastian Schmidt) - Made with ');
+    var credit = link('forge-credit', REPOSITORY, t('creditBefore'));
     credit.appendChild(element('span', 'forge-heart', '♥'));
-    credit.appendChild(document.createTextNode(' in Germany'));
+    credit.appendChild(document.createTextNode(t('creditAfter')));
     footer.appendChild(credit);
 
     var actions = element('div', 'forge-actions');
-    actions.appendChild(link('forge-link', APPS, 'More Home Assistant Apps'));
-    actions.appendChild(link('forge-link', SUPPORT, 'Support my work ☕'));
+    actions.appendChild(link('forge-link', APPS, t('more')));
+    actions.appendChild(link('forge-link', SUPPORT, t('support')));
     footer.appendChild(actions);
     return footer;
   }
@@ -164,6 +201,41 @@
     }
   }
 
+  // ---- the plugin's own words in the language of the browser -------------------------------------
+  // Exact matches of a text, except inside code and text fields. Words of a heading read differently there.
+  var HEADING_WORDS = { de: { 'Convert': 'Konvertiere', 'to': 'nach' } };
+
+  function translateText(node, words, headingWords) {
+    var value = node.nodeValue.trim();
+    var inHeading = node.parentNode && node.parentNode.closest && node.parentNode.closest('h1, h2, h3, h4, .card-title');
+    var translated = (inHeading && headingWords[value]) || words[value] || (/^Fails:/.test(value) ? value.replace('Fails:', 'Fehler:') : '');
+    if (translated) { node.nodeValue = node.nodeValue.replace(value, translated); }
+  }
+
+  function translatePage() {
+    var words = UI_WORDS[LANGUAGE];
+    if (!words) { return; }
+    var headingWords = HEADING_WORDS[LANGUAGE] || {};
+    var roots = document.querySelectorAll('.navbar, main');
+    for (var i = 0; i < roots.length; i++) {
+      var walker = document.createTreeWalker(roots[i], NodeFilter.SHOW_TEXT, {
+        acceptNode: function (node) {
+          return node.parentNode.closest('pre, code, textarea, script, style') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
+        }
+      });
+      var texts = [];
+      while (walker.nextNode()) { texts.push(walker.currentNode); }
+      texts.forEach(function (node) { translateText(node, words, headingWords); });
+    }
+    var fields = document.querySelectorAll('main [placeholder], main [title]');
+    for (var k = 0; k < fields.length; k++) {
+      ['placeholder', 'title'].forEach(function (name) {
+        var text = fields[k].getAttribute(name);
+        if (text && words[text]) { fields[k].setAttribute(name, words[text]); }
+      });
+    }
+  }
+
   // ---- upstream page: which sites use an upstream ----------------------------------------------
   // The admin API's configuration lies below the same base as this script, whatever ingress prefix it has.
   var BASE = new URL('../', SCRIPT).href;
@@ -171,33 +243,42 @@
   var sitesRequested = false;
 
   // Collects { hosts, dial } for every reverse proxy of a list of routes, also inside nested routes.
-  function collectProxies(routes, hosts, secure, port, found) {
+  function collectProxies(routes, hosts, found) {
     (routes || []).forEach(function (route) {
       var names = hosts;
       (route.match || []).forEach(function (matcher) { if (matcher.host) { names = matcher.host; } });
       (route.handle || []).forEach(function (handler) {
         if (handler.handler === 'subroute') {
-          collectProxies(handler.routes, names, secure, port, found);
+          collectProxies(handler.routes, names, found);
         } else if (handler.handler === 'reverse_proxy') {
           (handler.upstreams || []).forEach(function (upstream) {
-            if (upstream.dial) { found.push({ hosts: names, dial: upstream.dial, secure: secure, port: port }); }
+            if (upstream.dial) { found.push({ hosts: names, dial: upstream.dial }); }
           });
         }
       });
     });
   }
 
-  function siteAddress(host, secure, port) {
-    var defaultPort = secure ? '443' : '80';
-    return (secure ? 'https://' : 'http://') + host + (port && port !== defaultPort ? ':' + port : '');
+  // The address of a site as a visitor types it. The ports Caddy listens on (`http_port` and `https_port`, 8080 and
+  // 443 here) stand for the usual 80 and 443 outside, where the router forwards them, so they are left out.
+  function siteAddress(host, secure, port, app) {
+    var standard = [secure ? '443' : '80', String(secure ? app.https_port || 443 : app.http_port || 80)];
+    return (secure ? 'https://' : 'http://') + host + (!port || standard.indexOf(port) >= 0 ? '' : ':' + port);
   }
 
-  function readSites(servers) {
+  function readSites(app) {
     var found = [];
-    Object.keys(servers || {}).forEach(function (name) {
+    var servers = (app && app.servers) || {};
+    Object.keys(servers).forEach(function (name) {
       var server = servers[name];
-      var listen = (server.listen || [''])[0];
-      collectProxies(server.routes, [], !!server.tls_connection_policies, listen.split(':').pop(), found);
+      var port = ((server.listen || [''])[0].split(':').pop()) || '';
+      var proxies = [];
+      collectProxies(server.routes, [], proxies);
+      var secure = !!server.tls_connection_policies || port === String(app.https_port || 443);
+      proxies.forEach(function (proxy) {
+        proxy.hosts = proxy.hosts.map(function (host) { return { name: host, address: siteAddress(host, secure, port, app) }; });
+        found.push(proxy);
+      });
     });
     sites = found;
   }
@@ -205,18 +286,19 @@
   function loadSites() {
     if (sitesRequested) { return; }
     sitesRequested = true;
-    fetch(BASE + 'config/apps/http/servers', { cache: 'no-store' })
+    fetch(BASE + 'config/apps/http', { cache: 'no-store' })
       .then(function (reply) { return reply.json(); })
       .then(readSites)
       .catch(function () { sites = []; })
       .then(decorateUpstreams);
   }
 
-  function hostChip(entry, host) {
-    var plain = host.indexOf('*') >= 0;
-    var chip = plain ? element('span', 'forge-host') : link('forge-host', siteAddress(host, entry.secure, entry.port), '');
-    chip.appendChild(element('span', 'forge-host-label', 'Site'));
-    chip.appendChild(document.createTextNode(host + (plain ? '' : ' ↗')));
+  function hostChip(host) {
+    var plain = host.name.indexOf('*') >= 0;
+    var chip = plain ? element('span', 'forge-host') : link('forge-host', host.address, '');
+    if (!plain) { chip.title = t('siteTitle') + ': ' + host.address; }
+    chip.appendChild(element('span', 'forge-host-label', t('site')));
+    chip.appendChild(document.createTextNode(host.name + (plain ? '' : ' ↗')));
     return chip;
   }
 
@@ -229,17 +311,30 @@
       var dial = description.textContent.trim();
       var list = element('div', 'forge-hosts');
       sites.filter(function (entry) { return entry.dial === dial; }).forEach(function (entry) {
-        entry.hosts.forEach(function (host) { list.appendChild(hostChip(entry, host)); });
+        entry.hosts.forEach(function (host) { list.appendChild(hostChip(host)); });
       });
       if (list.childNodes.length) { description.parentNode.appendChild(list); }
     }
   }
 
+  // The footer belongs below everything. When the app renders a new page it may put its content behind the footer,
+  // so the footer is moved to the end again.
+  function keepFooterLast(footer) {
+    var next = footer.nextElementSibling;
+    while (next && /^(SCRIPT|LINK|NEXT-ROUTE-ANNOUNCER)$/.test(next.tagName)) { next = next.nextElementSibling; }
+    if (next) { document.body.appendChild(footer); }
+  }
+
   function ensure() {
-    if (document.body && !document.getElementById('forge-footer')) {
+    if (!document.body) { return; }
+    var footer = document.getElementById('forge-footer');
+    if (!footer) {
       document.body.appendChild(build());
       applyAccent();
+    } else {
+      keepFooterLast(footer);
     }
+    translatePage();
     markCurrentPage();
     if (/\/upstream\/?$/.test(window.location.pathname)) {
       loadSites();
