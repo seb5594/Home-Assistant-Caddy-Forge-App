@@ -40,21 +40,6 @@ configuration:
       start_server:
         name: Start web server
         description: Turn off to only check for updates and build the binary, then stop the app.
-  admin_ui:
-    name: Admin UI
-    description: >-
-      A web front end for Caddy's admin API (config, upstreams, metrics). Enabling it adds the plugin to the build
-      and serves the UI on port 5594 to private networks only; "Open Web UI" opens it.
-    fields:
-      enabled:
-        name: Enable admin UI
-        description: Adds github.com/gsmlg-dev/caddy-admin-ui to the build and serves it on port 5594.
-      user:
-        name: Username
-        description: Optional login for the admin UI. Needs a password as well.
-      password:
-        name: Password
-        description: Plain text or a bcrypt hash; plain text is hashed on start.
   simple:
     name: Simple mode
     description: Everything Caddy needs for typical setups, without writing a Caddyfile.
