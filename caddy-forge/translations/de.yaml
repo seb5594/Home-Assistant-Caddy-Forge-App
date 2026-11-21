@@ -39,6 +39,11 @@ configuration:
       enabled:
         name: Admin-Oberfläche aktivieren
         description: Fügt github.com/gsmlg-dev/caddy-admin-ui zum Build hinzu und liefert sie auf Port 8099 aus.
+      accent:
+        name: Akzentfarbe
+        description: >-
+          Eine Farbe wie #03a9f4 oder der Name eines Themes aus dem Themes-Ordner von Home Assistant, um dessen Primärfarbe zu
+          übernehmen. Leer lassen für Home-Assistant-Blau. Besucher können im Seitenfuß ihre eigene Farbe wählen.
       user:
         name: Benutzername
         description: Optionaler Login für die Admin-Oberfläche. Benötigt zusätzlich ein Passwort.

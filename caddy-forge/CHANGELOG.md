@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026.11.21.3
+
+- ✨ The admin UI has an accent colour: a palette in the page footer (presets, the primary colours of your Home Assistant themes and a free colour picker) that is remembered per browser.
+- ✨ New option `accent` for the default: a colour, or the name of a theme in Home Assistant's themes folder to follow its primary colour. Home Assistant blue otherwise.
+- ✨ The page also takes `?accent=%23e91e63` from the address and the colour of the surrounding Home Assistant page when it is embedded in one.
+
 ## 2026.11.21.2
 
 - ✨ The admin UI shows the developer footer (credit, more apps, support link). It is added by a small script after the page has loaded, so the UI keeps working when it re-renders.

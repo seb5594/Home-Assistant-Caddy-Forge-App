@@ -40,6 +40,11 @@ configuration:
       enabled:
         name: Enable admin UI
         description: Adds github.com/gsmlg-dev/caddy-admin-ui to the build and serves it on port 8099.
+      accent:
+        name: Accent colour
+        description: >-
+          A colour such as #03a9f4, or the name of a theme from Home Assistant's themes folder to follow its primary colour.
+          Leave empty for Home Assistant blue. Visitors can pick their own colour in the page footer.
       user:
         name: Username
         description: Optional login for the admin UI. Needs a password as well.
