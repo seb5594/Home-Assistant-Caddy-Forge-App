@@ -1,4 +1,4 @@
-ARG BUILD_FROM=ghcr.io/seb5594/home-assistant-base:3.24-2026.11.0@sha256:d116b9e5b612e6fcd997c86642d21b61953fcbe390c39c9b03443a577ed5e2a6
+ARG BUILD_FROM=ghcr.io/seb5594/home-assistant-base:3.24-2026.11.0
 
 # The web server ships as a ready-made binary, so a plain setup starts at once: upstream Caddy plus the two
 # plugins of the admin UI, compiled below on the build machine for the target architecture. The Go toolchain
